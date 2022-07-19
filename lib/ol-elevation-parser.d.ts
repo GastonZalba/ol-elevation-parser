@@ -1,5 +1,6 @@
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
+import Control, { Options as ControlOptions } from 'ol/control/Control';
 import { PluggableMap } from 'ol';
 import TileImage from 'ol/source/TileImage';
 import TileWMS from 'ol/source/TileWMS';
@@ -8,14 +9,37 @@ import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
 export * from './tiles';
-export default class ElevationParser {
-    protected _elevationSamples: IOptions['samples'];
-    protected _calcualateZMethod: IOptions['calculateZMethod'];
-    protected _elevationSource: IOptions['source'];
-    _options: IOptions;
+/**
+ * @extends {ol/control/Control~Control}
+ * @fires change:samples
+ * @fires change:source
+ * @fires change:calculateZMethod
+ * @param opt_options
+ */
+export default class ElevationParser extends Control {
     protected _map: PluggableMap;
     protected _countConnections: number;
-    constructor(map: PluggableMap, options: IOptions);
+    constructor(options: IOptions);
+    /**
+     * @public
+     * @param source
+     */
+    setSource(source: IOptions['source']): void;
+    /**
+     * @public
+     * @param samples
+     */
+    setSamples(samples: IOptions['samples']): void;
+    /**
+     * @public
+     * @param calculateZMethod
+     */
+    setCalculateZMethod(calculateZMethod: IOptions['calculateZMethod']): void;
+    /**
+     * @public
+     * @param noDataValue
+     */
+    setNoDataValue(noDataValue: IOptions['noDataValue']): void;
     /**
      *
      * @param coords
@@ -26,6 +50,10 @@ export default class ElevationParser {
         coordsWithZ: number[];
         zValues: number[];
     }>;
+    /**
+     * @protected
+     */
+    _addPropertyEvents(): void;
     /**
      * Get some sample coords from the geometry while preserving the vertices.
      * Each of these coords whill be used to request getFeatureInfo
@@ -54,7 +82,7 @@ export default class ElevationParser {
      */
     _extractValuesFromPixelDEM(pixel: number[]): number;
 }
-export interface IOptions {
+export interface IOptions extends Omit<ControlOptions, 'target'> {
     /**
      * Source to obtain the elevation values.
      * If not provided, the zGraph would be not displayed.
@@ -95,5 +123,10 @@ export interface IOptions {
      * `false` to disable
      */
     noDataValue?: number | false;
+    /**
+     * console.log to help debug the code
+     * `false` is the default
+     */
+    verbose?: boolean;
 }
 //# sourceMappingURL=ol-elevation-parser.d.ts.map
