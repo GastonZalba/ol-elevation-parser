@@ -15,7 +15,7 @@ import Feature from 'ol/Feature';
 
 import axios from 'axios';
 
-import { addTile, getTile } from './tiles';
+import { addTile, getTile, getTileKey } from './tiles';
 
 const AXIOS_TIMEOUT = 5000;
 
