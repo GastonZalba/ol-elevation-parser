@@ -1,5 +1,6 @@
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
+import Control, { Options as ControlOptions } from 'ol/control/Control';
 import { PluggableMap } from 'ol';
 import TileImage from 'ol/source/TileImage';
 import TileGrid from 'ol/tilegrid/TileGrid';
@@ -15,24 +16,75 @@ import Feature from 'ol/Feature';
 
 import axios from 'axios';
 
-import { addTile, getTile, getTileKey } from './tiles';
+import { addTile, cleanTiles, getTile, getTileKey } from './tiles';
+import { deepObjectAssign } from './helpers';
+import defaultOptions from './defaults';
+import logger, { setLoggerActive } from './logger';
 
 const AXIOS_TIMEOUT = 5000;
 
 export * from './tiles';
 
-export default class ElevationParser {
-    protected _elevationSamples: IOptions['samples'];
-    protected _calcualateZMethod: IOptions['calculateZMethod'];
-    protected _elevationSource: IOptions['source'];
-
-    public _options: IOptions;
+/**
+ * @extends {ol/control/Control~Control}
+ * @fires change:samples
+ * @fires change:source
+ * @fires change:calculateZMethod
+ * @param opt_options
+ */
+export default class ElevationParser extends Control {
     protected _map: PluggableMap;
     protected _countConnections = 0;
 
-    constructor(map: PluggableMap, options: IOptions) {
-        this._options = options;
-        this._map = map;
+    constructor(options: IOptions) {
+        super({});
+
+        const _options: IOptions = deepObjectAssign(defaultOptions, options);
+
+        setLoggerActive(_options.verbose);
+
+        this._addPropertyEvents();
+
+        this.set('source', _options.source, /* silent = */ false);
+        this.set('samples', _options.samples, /* silent = */ true);
+        this.set(
+            'calculateZMethod',
+            _options.calculateZMethod,
+            /* silent = */ true
+        );
+        this.set('noDataValue', _options.noDataValue, /* silent = */ true);
+    }
+
+    /**
+     * @public
+     * @param source
+     */
+    setSource(source: IOptions['source']): void {
+        this.set('source', source);
+    }
+
+    /**
+     * @public
+     * @param samples
+     */
+    setSamples(samples: IOptions['samples']): void {
+        this.set('samples', samples);
+    }
+
+    /**
+     * @public
+     * @param calculateZMethod
+     */
+    setCalculateZMethod(calculateZMethod: IOptions['calculateZMethod']): void {
+        this.set('calculateZMethod', calculateZMethod);
+    }
+
+    /**
+     * @public
+     * @param noDataValue
+     */
+    setNoDataValue(noDataValue: IOptions['noDataValue']): void {
+        this.set('noDataValue', noDataValue);
     }
 
     /**
@@ -49,7 +101,7 @@ export default class ElevationParser {
         let coordsWithZ = [];
         const zValues: number[] = [];
 
-        const source = this._options.source;
+        const source = this.get('source');
 
         if (typeof source === 'function') {
             // Use a custom function
@@ -63,7 +115,7 @@ export default class ElevationParser {
                 try {
                     // If there is a new connection (onChange event), abort this
                     if (this._countConnections !== countConnections) {
-                        console.log(
+                        logger(
                             'New geometry detected, previous requests aborted'
                         );
                         return;
@@ -73,7 +125,7 @@ export default class ElevationParser {
 
                     if (
                         source instanceof TileWMS &&
-                        this._options.calculateZMethod === 'getFeatureInfo'
+                        this.get('calculateZMethod') === 'getFeatureInfo'
                     ) {
                         zValue = await this._getZValuesFromWMS(
                             coord,
@@ -84,9 +136,9 @@ export default class ElevationParser {
                         zValue = await this._getZValuesFromImage(coord, source);
                     }
 
-                    if (this._options.noDataValue !== false) {
+                    if (this.get('noDataValue') !== false) {
                         zValue =
-                            zValue === this._options.noDataValue ? 0 : zValue;
+                            zValue === this.get('noDataValue') ? 0 : zValue;
                     }
 
                     // If null or undefined value is returned, transform to 0
@@ -110,6 +162,30 @@ export default class ElevationParser {
     }
 
     /**
+     * @protected
+     */
+    _addPropertyEvents(): void {
+        // @ts-expect-error
+        this.on('change:source', (evt: ObjectEvent) => {
+            const source = evt.target.get(evt.key);
+            cleanTiles();
+            if (source instanceof TileImage) {
+                // This is useful if the source is aready visible on the map,
+                // and some tiles are already downloaded outside this module
+                source.on('tileloadend', ({ tile }) => {
+                    const tileCoord = tile.tileCoord;
+                    const tileKey = getTileKey(source, tileCoord);
+                    addTile(
+                        tileKey,
+                        // @ts-expect-error
+                        tile.getImage()
+                    );
+                });
+            }
+        });
+    }
+
+    /**
      * Get some sample coords from the geometry while preserving the vertices.
      * Each of these coords whill be used to request getFeatureInfo
      * @protected
@@ -121,14 +197,14 @@ export default class ElevationParser {
 
         if (geom instanceof Point) return [geom.getCoordinates()];
 
-        const stepPercentage = 100 / this._options.samples;
+        const stepPercentage = 100 / this.get('samples');
 
         const totalLength = geom.getLength();
 
         const metersSample = totalLength * (stepPercentage / 100);
 
-        console.log('Total length', totalLength);
-        console.log(`Samples every ${metersSample.toFixed(2)} meters`);
+        logger('Total length', totalLength);
+        logger(`Samples every ${metersSample.toFixed(2)} meters`);
 
         const sampledCoords: Coordinate[] = [];
         let segmentCount = 0;
@@ -164,8 +240,8 @@ export default class ElevationParser {
             sampledCoords.push(end);
         });
 
-        console.log('Vertices', sampledCoords.length);
-        console.log('Segments', segmentCount);
+        logger('Vertices', sampledCoords.length);
+        logger('Segments', segmentCount);
 
         return sampledCoords;
     }
@@ -220,8 +296,7 @@ export default class ElevationParser {
 
         const url = urlFn(tileCoord, 1, projection);
 
-        //@ts-expect-error
-        const tileKey = getTileKey(this._options.source, tileCoord);
+        const tileKey = getTileKey(this.get('source'), tileCoord);
 
         let imageTile = getTile(tileKey);
 
@@ -324,20 +399,19 @@ export default class ElevationParser {
             return r * 256 + g + b / 256 - 32768;
         };
 
-        if (
-            this._options.calculateZMethod &&
-            typeof this._options.calculateZMethod === 'function'
-        ) {
-            return this._options.calculateZMethod(pixel[0], pixel[1], pixel[2]);
-        } else if (this._options.calculateZMethod === 'Mapbox') {
+        const calculateZMethod = this.get('calculateZMethod');
+
+        if (calculateZMethod && typeof calculateZMethod === 'function') {
+            return calculateZMethod(pixel[0], pixel[1], pixel[2]);
+        } else if (calculateZMethod === 'Mapbox') {
             return mapboxExtractElevation(pixel[0], pixel[1], pixel[2]);
-        } else if (this._options.calculateZMethod === 'Terrarium') {
+        } else if (calculateZMethod === 'Terrarium') {
             return terrariumExtractElevation(pixel[0], pixel[1], pixel[2]);
         }
     }
 }
 
-export interface IOptions {
+export interface IOptions extends Omit<ControlOptions, 'target'> {
     /**
      * Source to obtain the elevation values.
      * If not provided, the zGraph would be not displayed.
@@ -392,4 +466,10 @@ export interface IOptions {
      * `false` to disable
      */
     noDataValue?: number | false;
+
+    /**
+     * console.log to help debug the code
+     * `false` is the default
+     */
+    verbose?: boolean;
 }
