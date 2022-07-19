@@ -32,10 +32,6 @@ var elevationParser = new ElevationParser(map, opt_options);
 
 ## Install
 
-### Browser
-
-#### JS
-
 ### Parcel, Webpack, etc.
 
 NPM package: [ol-elevation-parser](https://www.npmjs.com/package/ol-elevation-parser).
