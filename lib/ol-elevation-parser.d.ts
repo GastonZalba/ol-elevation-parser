@@ -1,15 +1,13 @@
-import Geometry from 'ol/geom/Geometry';
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import { PluggableMap } from 'ol';
-import VectorSource from 'ol/source/Vector';
 import TileImage from 'ol/source/TileImage';
 import TileWMS from 'ol/source/TileWMS';
 import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
-export declare const getTileKey: (source: TileImage | VectorSource<Geometry>, tileCoord: number[]) => string;
+export * from './tiles';
 export default class ElevationParser {
     protected _elevationSamples: IOptions['samples'];
     protected _calcualateZMethod: IOptions['calculateZMethod'];

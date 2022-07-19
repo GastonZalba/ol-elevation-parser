@@ -5,6 +5,7 @@ import path from 'path';
 
 module.exports = {
     input: 'src/ol-elevation-parser.ts',
+    treeshake: false,
     output: [
         {
             dir: 'lib',

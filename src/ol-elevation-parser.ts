@@ -1,8 +1,6 @@
-import Geometry from 'ol/geom/Geometry';
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import { PluggableMap } from 'ol';
-import VectorSource from 'ol/source/Vector';
 import TileImage from 'ol/source/TileImage';
 import TileGrid from 'ol/tilegrid/TileGrid';
 import {
@@ -14,21 +12,14 @@ import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
-import { getUid } from 'ol/util';
 
 import axios from 'axios';
 
-import { addTile, getTile } from './CacheTiles';
+import { addTile, getTile } from './tiles';
 
 const AXIOS_TIMEOUT = 5000;
 
-export const getTileKey = (
-    source: TileImage | VectorSource<Geometry>,
-    tileCoord: number[]
-) => {
-    const uidSource = getUid(source);
-    return uidSource + '_' + tileCoord.join('-');
-};
+export * from './tiles';
 
 export default class ElevationParser {
     protected _elevationSamples: IOptions['samples'];

@@ -1,12 +1,11 @@
 {
   "name": "ol-elevation-parser",
   "version": "1.0.0",
-  "description": "Mapping tools for Open Layers",
+  "description": "Elevation parser data for Open Layers",
   "browser": "dist/ol-elevation-parser.min.js",
   "main": "dist/ol-elevation-parser.js",
   "module": "lib/ol-elevation-parser.js",
   "types": "lib/ol-elevation-parser.d.ts",
-  "style": "lib/ol-elevation-parser.css",
   "files": [
     "index.js",
     "lib/**/*",
