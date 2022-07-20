@@ -36,7 +36,9 @@ export default class ElevationParser extends Control {
     protected _initialized = false;
 
     constructor(options: IOptions) {
-        super({});
+        super({
+            element: undefined
+        });
 
         this._options = deepObjectAssign(defaultOptions, options);
 
@@ -65,6 +67,14 @@ export default class ElevationParser extends Control {
      */
     setSamples(samples: IOptions['samples']): void {
         this.set('samples', samples);
+    }
+
+    /**
+     * @public
+     * @param sampleSizeArea
+     */
+    setSampleSizeArea(sampleSizeArea: IOptions['sampleSizeArea']): void {
+        this.set('sampleSizeArea', sampleSizeArea);
     }
 
     /**

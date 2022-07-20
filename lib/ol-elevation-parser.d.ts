@@ -36,6 +36,11 @@ export default class ElevationParser extends Control {
     setSamples(samples: IOptions['samples']): void;
     /**
      * @public
+     * @param sampleSizeArea
+     */
+    setSampleSizeArea(sampleSizeArea: IOptions['sampleSizeArea']): void;
+    /**
+     * @public
      * @param calculateZMethod
      */
     setCalculateZMethod(calculateZMethod: IOptions['calculateZMethod']): void;
