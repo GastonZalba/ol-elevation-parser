@@ -1,13 +1,9 @@
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
 import Control, { Options as ControlOptions } from 'ol/control/Control';
 import { PluggableMap } from 'ol';
 import TileImage from 'ol/source/TileImage';
-import TileGrid from 'ol/tilegrid/TileGrid';
-import {
-    createXYZ,
-    getForProjection as getTileGridForProjection
-} from 'ol/tilegrid';
 import TileWMS from 'ol/source/TileWMS';
 import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
@@ -16,14 +12,13 @@ import Feature from 'ol/Feature';
 
 import axios from 'axios';
 
-import { addTile, cleanTiles, getTile, getTileKey } from './tiles';
-import { deepObjectAssign } from './helpers';
+import { addTile, cleanTiles, getTileKey } from './tiles';
+import { deepObjectAssign, getLineSamples, getPolygonSamples } from './helpers';
 import defaultOptions from './defaults';
 import logger, { setLoggerActive } from './logger';
+import ReadFromImage from './readFromImage';
 
 const AXIOS_TIMEOUT = 5000;
-
-export * from './tiles';
 
 /**
  * @extends {ol/control/Control~Control}
@@ -35,6 +30,7 @@ export * from './tiles';
 export default class ElevationParser extends Control {
     protected _map: PluggableMap;
     protected _countConnections = 0;
+    protected _readFromImage: ReadFromImage;
 
     constructor(options: IOptions) {
         super({});
@@ -43,16 +39,31 @@ export default class ElevationParser extends Control {
 
         setLoggerActive(_options.verbose);
 
+        // Change the default 'getFeatureInfo' method if the source is not TileWMS
+        if (
+            !(_options.source instanceof TileWMS) &&
+            _options.calculateZMethod === 'getFeatureInfo'
+        ) {
+            _options.calculateZMethod = 'Mapbox';
+        }
+
         this._addPropertyEvents();
 
-        this.set('source', _options.source, /* silent = */ false);
         this.set('samples', _options.samples, /* silent = */ true);
+        this.set(
+            'sampleSizeArea',
+            _options.sampleSizeArea,
+            /* silent = */ true
+        );
         this.set(
             'calculateZMethod',
             _options.calculateZMethod,
             /* silent = */ true
         );
         this.set('noDataValue', _options.noDataValue, /* silent = */ true);
+
+        // Need to be the lastest
+        this.set('source', _options.source, /* silent = */ false);
     }
 
     /**
@@ -94,9 +105,13 @@ export default class ElevationParser extends Control {
      * @public
      */
     async requestZValues(
-        originalFeature: Feature<LineString | Point>
-    ): Promise<{ coordsWithZ: number[]; zValues: number[] }> {
-        const coords = this._sampleFeatureCoords(originalFeature);
+        originalFeature: Feature<LineString | Point | Polygon>,
+        contour = false
+    ): Promise<{ coordsWithZ: Coordinate[]; zValues: number[] }> {
+        const coords = this._sampleFeatureCoords(
+            originalFeature,
+            contour
+        ).mainCoords;
 
         let coordsWithZ = [];
         const zValues: number[] = [];
@@ -133,7 +148,7 @@ export default class ElevationParser extends Control {
                             this._map.getView()
                         );
                     } else {
-                        zValue = await this._getZValuesFromImage(coord, source);
+                        zValue = await this._getZValuesFromImage(coord);
                     }
 
                     if (this.get('noDataValue') !== false) {
@@ -169,6 +184,20 @@ export default class ElevationParser extends Control {
         this.on('change:source', (evt: ObjectEvent) => {
             const source = evt.target.get(evt.key);
             cleanTiles();
+
+            if (
+                !(source instanceof Function) &&
+                this.get('calculateZMethod') !== 'getFeatureInfo'
+            ) {
+                this._readFromImage = new ReadFromImage(
+                    this.get('source'),
+                    this.get('calculateZMethod'),
+                    this._map
+                );
+            } else {
+                this._readFromImage = null;
+            }
+
             if (source instanceof TileImage) {
                 // This is useful if the source is aready visible on the map,
                 // and some tiles are already downloaded outside this module
@@ -191,59 +220,41 @@ export default class ElevationParser extends Control {
      * @protected
      */
     _sampleFeatureCoords(
-        drawFeature: Feature<LineString | Point>
-    ): Coordinate[] {
+        drawFeature: Feature<LineString | Point | Polygon>,
+        contour = false
+    ): {
+        mainCoords: Coordinate[];
+        pol?: any;
+    } {
         const geom = drawFeature.getGeometry();
+        let grid: any, mainCoords: Coordinate[]; // For polygons
 
-        if (geom instanceof Point) return [geom.getCoordinates()];
+        if (geom instanceof Point) {
+            mainCoords = [geom.getCoordinates()];
+        } else if (geom instanceof Polygon) {
+            const polygonFeature = drawFeature as Feature<Polygon>;
 
-        const stepPercentage = 100 / this.get('samples');
+            const coords = polygonFeature.getGeometry().getCoordinates()[0];
 
-        const totalLength = geom.getLength();
+            grid = getPolygonSamples(
+                polygonFeature,
+                this._map.getView().getProjection().getCode(),
+                this.get('sampleSizeArea')
+            );
 
-        const metersSample = totalLength * (stepPercentage / 100);
-
-        logger('Total length', totalLength);
-        logger(`Samples every ${metersSample.toFixed(2)} meters`);
-
-        const sampledCoords: Coordinate[] = [];
-        let segmentCount = 0;
-
-        // Get samples every percentage step while conserving all the vertex
-        geom.forEachSegment((start, end) => {
-            // Only get the first start segment
-            if (!segmentCount) {
-                sampledCoords.push(start);
-            }
-
-            segmentCount++;
-
-            const segmentGeom = new LineString([start, end]);
-            const segmentLength = segmentGeom.getLength();
-
-            /**
-             * segmentLength -> 100
-             * metersSample -> x
-             */
-            const newPercentage = (100 * metersSample) / segmentLength;
-
-            // skip 0 and 100
-            let segmentStepPercent = newPercentage;
-            while (segmentStepPercent < 100) {
-                const coordAt = segmentGeom.getCoordinateAt(
-                    segmentStepPercent / 100
+            if (contour) {
+                const contourGeom = new LineString(coords);
+                mainCoords = getLineSamples(contourGeom, this.get('samples'));
+            } else {
+                mainCoords = grid.map((g) =>
+                    g.getGeometry().getInteriorPoint().getCoordinates()
                 );
-                sampledCoords.push(coordAt);
-                segmentStepPercent = segmentStepPercent + newPercentage;
             }
+        } else if (geom instanceof LineString) {
+            mainCoords = getLineSamples(geom, this.get('samples'));
+        }
 
-            sampledCoords.push(end);
-        });
-
-        logger('Vertices', sampledCoords.length);
-        logger('Segments', segmentCount);
-
-        return sampledCoords;
+        return { mainCoords, pol: grid };
     }
 
     /**
@@ -252,99 +263,8 @@ export default class ElevationParser extends Control {
      * @param source
      * @returns
      */
-    async _getZValuesFromImage(
-        coordinate: Coordinate,
-        source: TileImage | XYZ
-    ): Promise<number> {
-        const addSrcToImage = (
-            img: HTMLImageElement,
-            src: string
-        ): Promise<any> => {
-            return new Promise((resolve, reject) => {
-                img.onload = () => resolve(img.height);
-                img.onerror = reject;
-                img.src = src;
-            });
-        };
-
-        let tilegrid = source.getTileGrid();
-
-        // If not tileGrid is provided, set a default for XYZ sources
-        if (!tilegrid) {
-            if (source instanceof XYZ) {
-                const defaultTileGrid = createXYZ();
-                tilegrid = new TileGrid({
-                    origin: defaultTileGrid.getOrigin(0),
-                    resolutions: defaultTileGrid.getResolutions()
-                });
-            } else {
-                tilegrid = getTileGridForProjection(
-                    this._map.getView().getProjection()
-                );
-            }
-        }
-
-        const tileCoord = tilegrid.getTileCoordForCoordAndResolution(
-            coordinate,
-            this._map.getView().getResolution()
-        );
-
-        const urlFn = source.getTileUrlFunction();
-
-        const projection =
-            source.getProjection() || this._map.getView().getProjection();
-
-        const url = urlFn(tileCoord, 1, projection);
-
-        const tileKey = getTileKey(this.get('source'), tileCoord);
-
-        let imageTile = getTile(tileKey);
-
-        // Check if the image was already downloaded
-        if (!getTile(tileKey)) {
-            const { data } = await axios.get(url, {
-                timeout: AXIOS_TIMEOUT,
-                responseType: 'blob'
-            });
-            const urlCreator = window.URL || window.webkitURL;
-            const imageSrc = urlCreator.createObjectURL(data);
-            const imageElement = new Image();
-            await addSrcToImage(imageElement, imageSrc);
-            addTile(tileKey, imageElement);
-            imageTile = imageElement;
-        }
-
-        const origin = tilegrid.getOrigin(tileCoord[0]);
-        const res = tilegrid.getResolution(tileCoord[0]);
-        const tileSize = tilegrid.getTileSize(tileCoord[0]);
-        const w = Math.floor(
-            ((coordinate[0] - origin[0]) / res) %
-                (tileSize[0] | (tileSize as number))
-        );
-        const h = Math.floor(
-            ((origin[1] - coordinate[1]) / res) %
-                (tileSize[1] | (tileSize as number))
-        );
-
-        const canvas = document.createElement('canvas');
-        canvas.width = imageTile.width;
-        canvas.height = imageTile.height;
-
-        // Add image to a canvas
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(imageTile, 0, 0);
-
-        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const imgData = img.data;
-        const index = (w + h * 256) * 4;
-        const pixel = [
-            imgData[index + 0],
-            imgData[index + 1],
-            imgData[index + 2],
-            imgData[index + 3]
-        ];
-
-        return this._extractValuesFromPixelDEM(pixel);
+    async _getZValuesFromImage(coordinate: Coordinate): Promise<number> {
+        return await this._readFromImage.read(coordinate);
     }
 
     /**
@@ -376,39 +296,6 @@ export default class ElevationParser extends Control {
 
         return data.features[0].properties.GRAY_INDEX;
     }
-
-    /**
-     * @protected
-     * @param pixel
-     * @returns
-     */
-    _extractValuesFromPixelDEM(pixel: number[]): number {
-        const mapboxExtractElevation = (
-            r: number,
-            g: number,
-            b: number
-        ): number => {
-            return (r * 256 * 256 + g * 256 + b) * 0.1 - 10000;
-        };
-
-        const terrariumExtractElevation = (
-            r: number,
-            g: number,
-            b: number
-        ): number => {
-            return r * 256 + g + b / 256 - 32768;
-        };
-
-        const calculateZMethod = this.get('calculateZMethod');
-
-        if (calculateZMethod && typeof calculateZMethod === 'function') {
-            return calculateZMethod(pixel[0], pixel[1], pixel[2]);
-        } else if (calculateZMethod === 'Mapbox') {
-            return mapboxExtractElevation(pixel[0], pixel[1], pixel[2]);
-        } else if (calculateZMethod === 'Terrarium') {
-            return terrariumExtractElevation(pixel[0], pixel[1], pixel[2]);
-        }
-    }
 }
 
 export interface IOptions extends Omit<ControlOptions, 'target'> {
@@ -422,7 +309,7 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
         | TileImage
         | XYZ
         | ((
-              originalFeature: Feature<LineString | Point>,
+              originalFeature: Feature<LineString | Point | Polygon>,
               sampledCoords: Coordinate[]
           ) => Promise<Coordinate[]>);
 
@@ -457,6 +344,15 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      *
      */
     samples?: number;
+
+    /**
+     * To obtain the elevation values on each volume measurement, multiples samples are taken across the polygon.
+     * Value in meters
+     * The bigger the number, the greater the quality of the measurement, but slower response times and
+     * bigger overhead (principally on `getFeatureInfo` method).
+     * `'auto'` is the default. This use 0.5 on small measurements, and 10 in biggers ones
+     */
+    sampleSizeArea?: number | 'auto';
 
     /**
      * When calculating the zGraph statistics from the raster dataset, you can choose to ignore specific values with the NoDataValue parameter.
