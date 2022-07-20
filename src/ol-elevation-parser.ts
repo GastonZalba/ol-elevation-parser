@@ -28,42 +28,27 @@ const AXIOS_TIMEOUT = 5000;
  * @param opt_options
  */
 export default class ElevationParser extends Control {
+    protected _options: IOptions;
     protected _map: PluggableMap;
     protected _countConnections = 0;
     protected _readFromImage: ReadFromImage;
 
+    protected _initialized = false;
+
     constructor(options: IOptions) {
         super({});
 
-        const _options: IOptions = deepObjectAssign(defaultOptions, options);
-
-        setLoggerActive(_options.verbose);
+        this._options = deepObjectAssign(defaultOptions, options);
 
         // Change the default 'getFeatureInfo' method if the source is not TileWMS
         if (
-            !(_options.source instanceof TileWMS) &&
-            _options.calculateZMethod === 'getFeatureInfo'
+            !(this._options.source instanceof TileWMS) &&
+            this._options.calculateZMethod === 'getFeatureInfo'
         ) {
-            _options.calculateZMethod = 'Mapbox';
+            this._options.calculateZMethod = 'Mapbox';
         }
 
-        this._addPropertyEvents();
-
-        this.set('samples', _options.samples, /* silent = */ true);
-        this.set(
-            'sampleSizeArea',
-            _options.sampleSizeArea,
-            /* silent = */ true
-        );
-        this.set(
-            'calculateZMethod',
-            _options.calculateZMethod,
-            /* silent = */ true
-        );
-        this.set('noDataValue', _options.noDataValue, /* silent = */ true);
-
-        // Need to be the lastest
-        this.set('source', _options.source, /* silent = */ false);
+        setLoggerActive(this._options.verbose);
     }
 
     /**
@@ -108,6 +93,8 @@ export default class ElevationParser extends Control {
         originalFeature: Feature<LineString | Point | Polygon>,
         contour = false
     ): Promise<{ coordsWithZ: Coordinate[]; zValues: number[] }> {
+        if (!this._initialized) this._init();
+
         const coords = this._sampleFeatureCoords(
             originalFeature,
             contour
@@ -174,6 +161,33 @@ export default class ElevationParser extends Control {
             }
         }
         return { coordsWithZ, zValues };
+    }
+
+    /**
+     * This is trigged once
+     * @protected
+     */
+    _init(): void {
+        this._initialized = true;
+
+        this._addPropertyEvents();
+
+        this.set('samples', this._options.samples, /* silent = */ true);
+
+        this.set(
+            'sampleSizeArea',
+            this._options.sampleSizeArea,
+            /* silent = */ true
+        );
+        this.set(
+            'calculateZMethod',
+            this._options.calculateZMethod,
+            /* silent = */ true
+        );
+        this.set('noDataValue', this._options.noDataValue, /* silent = */ true);
+
+        // Need to be the lastest
+        this.set('source', this._options.source, /* silent = */ false);
     }
 
     /**

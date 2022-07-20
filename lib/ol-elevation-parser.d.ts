@@ -18,9 +18,11 @@ import ReadFromImage from './readFromImage';
  * @param opt_options
  */
 export default class ElevationParser extends Control {
+    protected _options: IOptions;
     protected _map: PluggableMap;
     protected _countConnections: number;
     protected _readFromImage: ReadFromImage;
+    protected _initialized: boolean;
     constructor(options: IOptions);
     /**
      * @public
@@ -52,6 +54,11 @@ export default class ElevationParser extends Control {
         coordsWithZ: Coordinate[];
         zValues: number[];
     }>;
+    /**
+     * This is trigged once
+     * @protected
+     */
+    _init(): void;
     /**
      * @protected
      */
