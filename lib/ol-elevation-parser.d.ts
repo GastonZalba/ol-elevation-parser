@@ -1,5 +1,6 @@
 import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
+import Polygon from 'ol/geom/Polygon';
 import Control, { Options as ControlOptions } from 'ol/control/Control';
 import { PluggableMap } from 'ol';
 import TileImage from 'ol/source/TileImage';
@@ -8,7 +9,7 @@ import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
-export * from './tiles';
+import ReadFromImage from './readFromImage';
 /**
  * @extends {ol/control/Control~Control}
  * @fires change:samples
@@ -19,6 +20,7 @@ export * from './tiles';
 export default class ElevationParser extends Control {
     protected _map: PluggableMap;
     protected _countConnections: number;
+    protected _readFromImage: ReadFromImage;
     constructor(options: IOptions);
     /**
      * @public
@@ -46,8 +48,8 @@ export default class ElevationParser extends Control {
      * @returns
      * @public
      */
-    requestZValues(originalFeature: Feature<LineString | Point>): Promise<{
-        coordsWithZ: number[];
+    requestZValues(originalFeature: Feature<LineString | Point | Polygon>, contour?: boolean): Promise<{
+        coordsWithZ: Coordinate[];
         zValues: number[];
     }>;
     /**
@@ -59,14 +61,17 @@ export default class ElevationParser extends Control {
      * Each of these coords whill be used to request getFeatureInfo
      * @protected
      */
-    _sampleFeatureCoords(drawFeature: Feature<LineString | Point>): Coordinate[];
+    _sampleFeatureCoords(drawFeature: Feature<LineString | Point | Polygon>, contour?: boolean): {
+        mainCoords: Coordinate[];
+        pol?: any;
+    };
     /**
      *
      * @param coordinate
      * @param source
      * @returns
      */
-    _getZValuesFromImage(coordinate: Coordinate, source: TileImage | XYZ): Promise<number>;
+    _getZValuesFromImage(coordinate: Coordinate): Promise<number>;
     /**
      *
      * @param coordinate
@@ -75,12 +80,6 @@ export default class ElevationParser extends Control {
      * @returns
      */
     _getZValuesFromWMS(coordinate: Coordinate, source: TileWMS, view: View): Promise<number>;
-    /**
-     * @protected
-     * @param pixel
-     * @returns
-     */
-    _extractValuesFromPixelDEM(pixel: number[]): number;
 }
 export interface IOptions extends Omit<ControlOptions, 'target'> {
     /**
@@ -88,7 +87,7 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * If not provided, the zGraph would be not displayed.
      * You can provide a custom function to call an API or other methods to obtain the data.
      */
-    source?: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point>, sampledCoords: Coordinate[]) => Promise<Coordinate[]>);
+    source?: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: Coordinate[]) => Promise<Coordinate[]>);
     /**
      * To obtain the elevation values from the diferrents sources, you can:
      * - Calculate the zValues from the rgb pixel data (`TileImage` and `XYZ` source formats need this):
@@ -115,6 +114,14 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      *
      */
     samples?: number;
+    /**
+     * To obtain the elevation values on each volume measurement, multiples samples are taken across the polygon.
+     * Value in meters
+     * The bigger the number, the greater the quality of the measurement, but slower response times and
+     * bigger overhead (principally on `getFeatureInfo` method).
+     * `'auto'` is the default. This use 0.5 on small measurements, and 10 in biggers ones
+     */
+    sampleSizeArea?: number | 'auto';
     /**
      * When calculating the zGraph statistics from the raster dataset, you can choose to ignore specific values with the NoDataValue parameter.
      * These values are considerated as transparency, so probably you want these replaced by 0.
