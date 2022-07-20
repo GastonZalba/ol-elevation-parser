@@ -145,7 +145,7 @@ export default class ElevationParser extends Control {
                         zValue = await this._getZValuesFromWMS(
                             coord,
                             source,
-                            this._map.getView()
+                            this.getMap().getView()
                         );
                     } else {
                         zValue = await this._getZValuesFromImage(coord);
@@ -192,7 +192,7 @@ export default class ElevationParser extends Control {
                 this._readFromImage = new ReadFromImage(
                     this.get('source'),
                     this.get('calculateZMethod'),
-                    this._map
+                    this.getMap()
                 );
             } else {
                 this._readFromImage = null;
@@ -238,7 +238,7 @@ export default class ElevationParser extends Control {
 
             grid = getPolygonSamples(
                 polygonFeature,
-                this._map.getView().getProjection().getCode(),
+                this.getMap().getView().getProjection().getCode(),
                 this.get('sampleSizeArea')
             );
 
