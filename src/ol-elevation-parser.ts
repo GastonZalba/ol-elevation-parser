@@ -37,7 +37,7 @@ export default class ElevationParser extends Control {
 
     constructor(options: IOptions) {
         super({
-            element: undefined
+            element: document.createElement('div')
         });
 
         this._options = deepObjectAssign(defaultOptions, options);
@@ -51,6 +51,7 @@ export default class ElevationParser extends Control {
         }
 
         setLoggerActive(this._options.verbose);
+        this._addPropertyEvents();
     }
 
     /**
@@ -180,8 +181,6 @@ export default class ElevationParser extends Control {
     _init(): void {
         this._initialized = true;
 
-        this._addPropertyEvents();
-
         this.set('samples', this._options.samples, /* silent = */ true);
 
         this.set(
@@ -196,7 +195,7 @@ export default class ElevationParser extends Control {
         );
         this.set('noDataValue', this._options.noDataValue, /* silent = */ true);
 
-        // Need to be the lastest
+        // Need to be the latest
         this.set('source', this._options.source, /* silent = */ false);
     }
 
