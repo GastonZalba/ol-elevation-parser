@@ -96,20 +96,25 @@ export default class ElevationParser extends Control {
 
     /**
      *
-     * @param coords
+     * @param originalFeature
+     * @param contour Only for Polygons
      * @returns
      * @public
      */
     async requestZValues(
         originalFeature: Feature<LineString | Point | Polygon>,
         contour = false
-    ): Promise<{ coordsWithZ: Coordinate[]; zValues: number[] }> {
+    ): Promise<{
+        coordsWithZ: Coordinate[];
+        zValues: number[];
+        gridPolygons: Feature<Polygon>[];
+    }> {
         if (!this._initialized) this._init();
 
-        const coords = this._sampleFeatureCoords(
+        const { coords, gridPolygons } = this._sampleFeatureCoords(
             originalFeature,
             contour
-        ).mainCoords;
+        );
 
         let coordsWithZ = [];
         const zValues: number[] = [];
@@ -171,7 +176,7 @@ export default class ElevationParser extends Control {
                 }
             }
         }
-        return { coordsWithZ, zValues };
+        return { coordsWithZ, zValues, gridPolygons };
     }
 
     /**
@@ -238,46 +243,49 @@ export default class ElevationParser extends Control {
     }
 
     /**
-     * Get some sample coords from the geometry while preserving the vertices.
-     * Each of these coords whill be used to request getFeatureInfo
-     * @protected
-     */
+ * Get some sample coords from the geometry while preserving the vertices.
+ *
+ * @param feature 
+ * @param contour Only for Polygons, to retrive samples of the contour instead of the area
+ * @returns 
+ * @protected
+
+ */
     _sampleFeatureCoords(
-        drawFeature: Feature<LineString | Point | Polygon>,
+        feature: Feature<LineString | Point | Polygon>,
         contour = false
     ): {
-        mainCoords: Coordinate[];
-        pol?: any;
+        coords: Coordinate[];
+        gridPolygons?: Feature<Polygon>[];
     } {
-        const geom = drawFeature.getGeometry();
-        let grid: any, mainCoords: Coordinate[]; // For polygons
+        const geom = feature.getGeometry();
+        let gridPolygons: Feature<Polygon>[], coords: Coordinate[]; // For polygons
 
         if (geom instanceof Point) {
-            mainCoords = [geom.getCoordinates()];
+            coords = [geom.getCoordinates()];
         } else if (geom instanceof Polygon) {
-            const polygonFeature = drawFeature as Feature<Polygon>;
-
-            const coords = polygonFeature.getGeometry().getCoordinates()[0];
-
-            grid = getPolygonSamples(
-                polygonFeature,
-                this.getMap().getView().getProjection().getCode(),
-                this.get('sampleSizeArea')
-            );
-
+            const polygonFeature = feature as Feature<Polygon>;
             if (contour) {
-                const contourGeom = new LineString(coords);
-                mainCoords = getLineSamples(contourGeom, this.get('samples'));
+                const sub_coords = polygonFeature
+                    .getGeometry()
+                    .getCoordinates()[0];
+                const contourGeom = new LineString(sub_coords);
+                coords = getLineSamples(contourGeom, this.get('samples'));
             } else {
-                mainCoords = grid.map((g) =>
+                gridPolygons = getPolygonSamples(
+                    polygonFeature,
+                    this.getMap().getView().getProjection().getCode(),
+                    this.get('sampleSizeArea')
+                );
+                coords = gridPolygons.map((g) =>
                     g.getGeometry().getInteriorPoint().getCoordinates()
                 );
             }
         } else if (geom instanceof LineString) {
-            mainCoords = getLineSamples(geom, this.get('samples'));
+            coords = getLineSamples(geom, this.get('samples'));
         }
 
-        return { mainCoords, pol: grid };
+        return { coords, gridPolygons };
     }
 
     /**
