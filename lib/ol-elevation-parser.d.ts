@@ -51,13 +51,15 @@ export default class ElevationParser extends Control {
     setNoDataValue(noDataValue: IOptions['noDataValue']): void;
     /**
      *
-     * @param coords
+     * @param originalFeature
+     * @param contour Only for Polygons
      * @returns
      * @public
      */
     requestZValues(originalFeature: Feature<LineString | Point | Polygon>, contour?: boolean): Promise<{
         coordsWithZ: Coordinate[];
         zValues: number[];
+        gridPolygons: Feature<Polygon>[];
     }>;
     /**
      * This is trigged once
@@ -69,13 +71,17 @@ export default class ElevationParser extends Control {
      */
     _addPropertyEvents(): void;
     /**
-     * Get some sample coords from the geometry while preserving the vertices.
-     * Each of these coords whill be used to request getFeatureInfo
-     * @protected
-     */
-    _sampleFeatureCoords(drawFeature: Feature<LineString | Point | Polygon>, contour?: boolean): {
-        mainCoords: Coordinate[];
-        pol?: any;
+ * Get some sample coords from the geometry while preserving the vertices.
+ *
+ * @param feature
+ * @param contour Only for Polygons, to retrive samples of the contour instead of the area
+ * @returns
+ * @protected
+
+ */
+    _sampleFeatureCoords(feature: Feature<LineString | Point | Polygon>, contour?: boolean): {
+        coords: Coordinate[];
+        gridPolygons?: Feature<Polygon>[];
     };
     /**
      *
