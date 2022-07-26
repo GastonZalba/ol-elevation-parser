@@ -1,6 +1,6 @@
 {
   "name": "ol-elevation-parser",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "Elevation parser data for Open Layers",
   "browser": "dist/ol-elevation-parser.min.js",
   "main": "dist/ol-elevation-parser.js",
