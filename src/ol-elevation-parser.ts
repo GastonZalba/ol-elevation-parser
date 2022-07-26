@@ -23,9 +23,11 @@ const AXIOS_TIMEOUT = 5000;
 /**
  * @extends {ol/control/Control~Control}
  * @fires change:samples
+ * @fires change:sampleSizeArea
  * @fires change:source
  * @fires change:calculateZMethod
- * @param opt_options
+ * @fires change:noDataValue
+ * @param options
  */
 export default class ElevationParser extends Control {
     protected _options: IOptions;
@@ -52,6 +54,54 @@ export default class ElevationParser extends Control {
 
         setLoggerActive(this._options.verbose);
         this._addPropertyEvents();
+    }
+
+     /**
+     *
+     * @param feature
+     * @returns
+     * @public
+     */
+      async requestZValues(
+        feature: Feature<LineString | Point | Polygon>
+    ): Promise<IRequestZValues> {
+        // Run once
+        if (!this._initialized) this._init();
+
+        const { sampledCoords: sampleCoords, gridPolygons } =
+            this._sampleFeatureCoords(feature);
+
+        let contourCoords: Coordinate[], mainCoords: Coordinate[];
+
+        const source = this.get('source');
+
+        if (typeof source === 'function') {
+            // Use a custom function. Useful for using apis to retrieve the zvalues
+            ({ mainCoords, contourCoords } = await source(
+                feature,
+                sampleCoords
+            ));
+        } else {
+            mainCoords = await this._getZFromSampledCoords(
+                sampleCoords.mainCoords
+            );
+
+            // Only Polygons
+            if (sampleCoords.contourCoords) {
+                contourCoords = await this._getZFromSampledCoords(
+                    sampleCoords.contourCoords
+                );
+            }
+        }
+        return {
+            mainCoords,
+            ...(contourCoords && {
+                contourCoords: contourCoords
+            }),
+            ...(gridPolygons && {
+                gridPolygons
+            })
+        };
     }
 
     /**
@@ -92,54 +142,6 @@ export default class ElevationParser extends Control {
      */
     setNoDataValue(noDataValue: IOptions['noDataValue']): void {
         this.set('noDataValue', noDataValue);
-    }
-
-    /**
-     *
-     * @param originalFeature
-     * @returns
-     * @public
-     */
-    async requestZValues(
-        originalFeature: Feature<LineString | Point | Polygon>
-    ): Promise<IRequestZValues> {
-        // Run once
-        if (!this._initialized) this._init();
-
-        const { sampledCoords: sampleCoords, gridPolygons } =
-            this._sampleFeatureCoords(originalFeature);
-
-        let contourCoords: Coordinate[], mainCoords: Coordinate[];
-
-        const source = this.get('source');
-
-        if (typeof source === 'function') {
-            // Use a custom function. Useful for using apis to retrieve the zvalues
-            ({ mainCoords, contourCoords } = await source(
-                originalFeature,
-                sampleCoords
-            ));
-        } else {
-            mainCoords = await this._getZFromSampledCoords(
-                sampleCoords.mainCoords
-            );
-
-            // Only Polygons
-            if (sampleCoords.contourCoords) {
-                contourCoords = await this._getZFromSampledCoords(
-                    sampleCoords.contourCoords
-                );
-            }
-        }
-        return {
-            mainCoords,
-            ...(contourCoords && {
-                contourCoords: contourCoords
-            }),
-            ...(gridPolygons && {
-                gridPolygons
-            })
-        };
     }
 
     /**
@@ -318,6 +320,7 @@ export default class ElevationParser extends Control {
      *
      * @param coordinate
      * @returns
+     * @private
      */
     async _getZValuesFromImage(coordinate: Coordinate): Promise<number> {
         return await this._readFromImage.read(coordinate);
@@ -329,6 +332,7 @@ export default class ElevationParser extends Control {
      * @param source
      * @param view
      * @returns
+     * @private
      */
     async _getZValuesFromWMS(
         coordinate: Coordinate,
