@@ -52,15 +52,17 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param originalFeature
-     * @param contour Only for Polygons
      * @returns
      * @public
      */
-    requestZValues(originalFeature: Feature<LineString | Point | Polygon>, contour?: boolean): Promise<{
-        coordsWithZ: Coordinate[];
-        zValues: number[];
-        gridPolygons: Feature<Polygon>[];
-    }>;
+    requestZValues(originalFeature: Feature<LineString | Point | Polygon>): Promise<IRequestZValues>;
+    /**
+     *
+     * @param coords
+     * @returns
+     * @private
+     */
+    _getZFromSampledCoords: (coords: Coordinate[]) => Promise<Coordinate[]>;
     /**
      * This is trigged once
      * @protected
@@ -71,22 +73,16 @@ export default class ElevationParser extends Control {
      */
     _addPropertyEvents(): void;
     /**
- * Get some sample coords from the geometry while preserving the vertices.
- *
- * @param feature
- * @param contour Only for Polygons, to retrive samples of the contour instead of the area
- * @returns
- * @protected
-
- */
-    _sampleFeatureCoords(feature: Feature<LineString | Point | Polygon>, contour?: boolean): {
-        coords: Coordinate[];
-        gridPolygons?: Feature<Polygon>[];
-    };
+     * Get some sample coords from the geometry while preserving the vertices.
+     *
+     * @param feature
+     * @returns
+     * @protected
+     */
+    _sampleFeatureCoords(feature: Feature<LineString | Point | Polygon>): ISampledCoords;
     /**
      *
      * @param coordinate
-     * @param source
      * @returns
      */
     _getZValuesFromImage(coordinate: Coordinate): Promise<number>;
@@ -99,13 +95,43 @@ export default class ElevationParser extends Control {
      */
     _getZValuesFromWMS(coordinate: Coordinate, source: TileWMS, view: View): Promise<number>;
 }
+/**
+ * @private
+ */
+interface ISampledCoords {
+    sampledCoords: IElevationCoords;
+    gridPolygons?: Feature<Polygon>[];
+}
+/**
+ * @private
+ */
+interface IRequestZValues extends IElevationCoords {
+    gridPolygons: Feature<Polygon>[];
+}
+/**
+ * @public
+ */
+export interface IElevationCoords {
+    /**
+     * Sampled coordinates from LineStrings, Point coordinates,
+     * or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
+     */
+    mainCoords: Coordinate[];
+    /**
+     * Contour coordinates from Polygons features.
+     */
+    contourCoords?: Coordinate[];
+}
+/**
+ * @public
+ */
 export interface IOptions extends Omit<ControlOptions, 'target'> {
     /**
      * Source to obtain the elevation values.
      * If not provided, the zGraph would be not displayed.
      * You can provide a custom function to call an API or other methods to obtain the data.
      */
-    source?: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: Coordinate[]) => Promise<Coordinate[]>);
+    source?: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: IElevationCoords) => Promise<IElevationCoords>);
     /**
      * To obtain the elevation values from the diferrents sources, you can:
      * - Calculate the zValues from the rgb pixel data (`TileImage` and `XYZ` source formats need this):
@@ -154,4 +180,5 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      */
     verbose?: boolean;
 }
+export {};
 //# sourceMappingURL=ol-elevation-parser.d.ts.map
