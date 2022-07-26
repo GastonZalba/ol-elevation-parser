@@ -1,2 +1,3 @@
 dist/** linguist-detectable=false
 lib/** linguist-detectable=false
+scripts/** linguist-detectable=false
