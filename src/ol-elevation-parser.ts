@@ -363,9 +363,12 @@ interface ISampledCoords {
 }
 
 /**
- * @private
+ * @public
  */
-interface IRequestZValues extends IElevationCoords {
+export interface IRequestZValues extends IElevationCoords {
+    /**
+     * Sampled Polygons
+     */
     gridPolygons: Feature<Polygon>[];
 }
 
