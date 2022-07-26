@@ -13,9 +13,11 @@ import ReadFromImage from './readFromImage';
 /**
  * @extends {ol/control/Control~Control}
  * @fires change:samples
+ * @fires change:sampleSizeArea
  * @fires change:source
  * @fires change:calculateZMethod
- * @param opt_options
+ * @fires change:noDataValue
+ * @param options
  */
 export default class ElevationParser extends Control {
     protected _options: IOptions;
@@ -24,6 +26,13 @@ export default class ElevationParser extends Control {
     protected _readFromImage: ReadFromImage;
     protected _initialized: boolean;
     constructor(options: IOptions);
+    /**
+     *
+     * @param feature
+     * @returns
+     * @public
+     */
+    requestZValues(feature: Feature<LineString | Point | Polygon>): Promise<IRequestZValues>;
     /**
      * @public
      * @param source
@@ -49,13 +58,6 @@ export default class ElevationParser extends Control {
      * @param noDataValue
      */
     setNoDataValue(noDataValue: IOptions['noDataValue']): void;
-    /**
-     *
-     * @param originalFeature
-     * @returns
-     * @public
-     */
-    requestZValues(originalFeature: Feature<LineString | Point | Polygon>): Promise<IRequestZValues>;
     /**
      *
      * @param coords
@@ -84,6 +86,7 @@ export default class ElevationParser extends Control {
      *
      * @param coordinate
      * @returns
+     * @private
      */
     _getZValuesFromImage(coordinate: Coordinate): Promise<number>;
     /**
@@ -92,6 +95,7 @@ export default class ElevationParser extends Control {
      * @param source
      * @param view
      * @returns
+     * @private
      */
     _getZValuesFromWMS(coordinate: Coordinate, source: TileWMS, view: View): Promise<number>;
 }

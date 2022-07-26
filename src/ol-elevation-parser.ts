@@ -56,13 +56,13 @@ export default class ElevationParser extends Control {
         this._addPropertyEvents();
     }
 
-     /**
+    /**
      *
      * @param feature
      * @returns
      * @public
      */
-      async requestZValues(
+    async requestZValues(
         feature: Feature<LineString | Point | Polygon>
     ): Promise<IRequestZValues> {
         // Run once
