@@ -97,87 +97,113 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param originalFeature
-     * @param contour Only for Polygons
      * @returns
      * @public
      */
     async requestZValues(
-        originalFeature: Feature<LineString | Point | Polygon>,
-        contour = false
-    ): Promise<{
-        coordsWithZ: Coordinate[];
-        zValues: number[];
-        gridPolygons: Feature<Polygon>[];
-    }> {
+        originalFeature: Feature<LineString | Point | Polygon>
+    ): Promise<IRequestZValues> {
+        // Run once
         if (!this._initialized) this._init();
 
-        const { coords, gridPolygons } = this._sampleFeatureCoords(
-            originalFeature,
-            contour
-        );
+        const { sampledCoords: sampleCoords, gridPolygons } =
+            this._sampleFeatureCoords(originalFeature);
 
-        let coordsWithZ = [];
-        const zValues: number[] = [];
+        let contourCoords: Coordinate[], mainCoords: Coordinate[];
 
         const source = this.get('source');
 
         if (typeof source === 'function') {
-            // Use a custom function
-            coordsWithZ = await source(originalFeature, coords);
+            // Use a custom function. Useful for using apis to retrieve the zvalues
+            ({ mainCoords, contourCoords } = await source(
+                originalFeature,
+                sampleCoords
+            ));
         } else {
-            this._countConnections++;
-            const countConnections = this._countConnections;
-            let errorCount = 0;
+            mainCoords = await this._getZFromSampledCoords(
+                sampleCoords.mainCoords
+            );
 
-            for (const coord of coords) {
-                try {
-                    // If there is a new connection (onChange event), abort this
-                    if (this._countConnections !== countConnections) {
-                        logger(
-                            'New geometry detected, previous requests aborted'
-                        );
-                        return;
-                    }
+            // Only Polygons
+            if (sampleCoords.contourCoords) {
+                contourCoords = await this._getZFromSampledCoords(
+                    sampleCoords.contourCoords
+                );
+            }
+        }
+        return {
+            mainCoords,
+            ...(contourCoords && {
+                contourCoords: contourCoords
+            }),
+            ...(gridPolygons && {
+                gridPolygons
+            })
+        };
+    }
 
-                    let zValue: number;
+    /**
+     *
+     * @param coords
+     * @returns
+     * @private
+     */
+    _getZFromSampledCoords = async (
+        coords: Coordinate[]
+    ): Promise<Coordinate[]> => {
+        this._countConnections++;
+        const countConnections = this._countConnections;
+        let errorCount = 0;
 
-                    if (
-                        source instanceof TileWMS &&
-                        this.get('calculateZMethod') === 'getFeatureInfo'
-                    ) {
-                        zValue = await this._getZValuesFromWMS(
-                            coord,
-                            source,
-                            this.getMap().getView()
-                        );
-                    } else {
-                        zValue = await this._getZValuesFromImage(coord);
-                    }
+        const coordsWithZ = [];
 
-                    if (this.get('noDataValue') !== false) {
-                        zValue =
-                            zValue === this.get('noDataValue') ? 0 : zValue;
-                    }
+        const source = this.get('source');
 
-                    // If null or undefined value is returned, transform to 0
-                    const zValueRound =
-                        typeof zValue !== 'undefined'
-                            ? Number(zValue.toFixed(3))
-                            : 0;
+        for (const coord of coords) {
+            try {
+                // If there is a new connection (onChange event), abort this
+                if (this._countConnections !== countConnections) {
+                    logger('New geometry detected, previous requests aborted');
+                    return;
+                }
 
-                    coordsWithZ.push([...coord, zValueRound]);
-                    zValues.push(zValueRound);
-                } catch (err) {
-                    errorCount++;
-                    console.error(err);
-                    if (errorCount >= 5) {
-                        throw err;
-                    }
+                let zValue: number;
+
+                if (
+                    source instanceof TileWMS &&
+                    this.get('calculateZMethod') === 'getFeatureInfo'
+                ) {
+                    zValue = await this._getZValuesFromWMS(
+                        coord,
+                        source,
+                        this.getMap().getView()
+                    );
+                } else {
+                    zValue = await this._getZValuesFromImage(coord);
+                }
+
+                if (this.get('noDataValue') !== false) {
+                    zValue = zValue === this.get('noDataValue') ? 0 : zValue;
+                }
+
+                // If null or undefined value is returned, transform to 0
+                const zValueRound =
+                    typeof zValue !== 'undefined'
+                        ? Number(zValue.toFixed(3))
+                        : 0;
+
+                coordsWithZ.push([...coord, zValueRound]);
+            } catch (err) {
+                errorCount++;
+                console.error(err);
+                if (errorCount >= 5) {
+                    throw err;
                 }
             }
         }
-        return { coordsWithZ, zValues, gridPolygons };
-    }
+
+        return coordsWithZ;
+    };
 
     /**
      * This is trigged once
@@ -243,55 +269,54 @@ export default class ElevationParser extends Control {
     }
 
     /**
- * Get some sample coords from the geometry while preserving the vertices.
- *
- * @param feature 
- * @param contour Only for Polygons, to retrive samples of the contour instead of the area
- * @returns 
- * @protected
-
- */
+     * Get some sample coords from the geometry while preserving the vertices.
+     *
+     * @param feature
+     * @returns
+     * @protected
+     */
     _sampleFeatureCoords(
-        feature: Feature<LineString | Point | Polygon>,
-        contour = false
-    ): {
-        coords: Coordinate[];
-        gridPolygons?: Feature<Polygon>[];
-    } {
+        feature: Feature<LineString | Point | Polygon>
+    ): ISampledCoords {
         const geom = feature.getGeometry();
-        let gridPolygons: Feature<Polygon>[], coords: Coordinate[]; // For polygons
+
+        let gridPolygons: Feature<Polygon>[],
+            contourCoords: Coordinate[],
+            mainCoords: Coordinate[]; // For polygons
 
         if (geom instanceof Point) {
-            coords = [geom.getCoordinates()];
+            mainCoords = [geom.getCoordinates()];
         } else if (geom instanceof Polygon) {
             const polygonFeature = feature as Feature<Polygon>;
-            if (contour) {
-                const sub_coords = polygonFeature
-                    .getGeometry()
-                    .getCoordinates()[0];
-                const contourGeom = new LineString(sub_coords);
-                coords = getLineSamples(contourGeom, this.get('samples'));
-            } else {
-                gridPolygons = getPolygonSamples(
-                    polygonFeature,
-                    this.getMap().getView().getProjection().getCode(),
-                    this.get('sampleSizeArea')
-                );
-                coords = gridPolygons.map((g) =>
-                    g.getGeometry().getInteriorPoint().getCoordinates()
-                );
-            }
+
+            const sub_coords = polygonFeature.getGeometry().getCoordinates()[0];
+            const contourGeom = new LineString(sub_coords);
+            contourCoords = getLineSamples(contourGeom, this.get('samples'));
+
+            gridPolygons = getPolygonSamples(
+                polygonFeature,
+                this.getMap().getView().getProjection().getCode(),
+                this.get('sampleSizeArea')
+            );
+            mainCoords = gridPolygons.map((g) =>
+                g.getGeometry().getInteriorPoint().getCoordinates()
+            );
         } else if (geom instanceof LineString) {
-            coords = getLineSamples(geom, this.get('samples'));
+            mainCoords = getLineSamples(geom, this.get('samples'));
         }
 
-        return { coords, gridPolygons };
+        return {
+            sampledCoords: {
+                mainCoords,
+                contourCoords
+            },
+            gridPolygons
+        };
     }
 
     /**
      *
      * @param coordinate
-     * @param source
      * @returns
      */
     async _getZValuesFromImage(coordinate: Coordinate): Promise<number> {
@@ -329,6 +354,39 @@ export default class ElevationParser extends Control {
     }
 }
 
+/**
+ * @private
+ */
+interface ISampledCoords {
+    sampledCoords: IElevationCoords;
+    gridPolygons?: Feature<Polygon>[];
+}
+
+/**
+ * @private
+ */
+interface IRequestZValues extends IElevationCoords {
+    gridPolygons: Feature<Polygon>[];
+}
+
+/**
+ * @public
+ */
+export interface IElevationCoords {
+    /**
+     * Sampled coordinates from LineStrings, Point coordinates,
+     * or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
+     */
+    mainCoords: Coordinate[];
+    /**
+     * Contour coordinates from Polygons features.
+     */
+    contourCoords?: Coordinate[];
+}
+
+/**
+ * @public
+ */
 export interface IOptions extends Omit<ControlOptions, 'target'> {
     /**
      * Source to obtain the elevation values.
@@ -341,8 +399,8 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
         | XYZ
         | ((
               originalFeature: Feature<LineString | Point | Polygon>,
-              sampledCoords: Coordinate[]
-          ) => Promise<Coordinate[]>);
+              sampledCoords: IElevationCoords
+          ) => Promise<IElevationCoords>);
 
     /**
      * To obtain the elevation values from the diferrents sources, you can:
