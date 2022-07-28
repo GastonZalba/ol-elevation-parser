@@ -161,16 +161,16 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * - `TileImage`and `XYZ` are calculated across each pixel after downloading the required tiles.
      * The bigger the number, the greater the quality of the elevation data, but slower response times and
      * bigger overhead (principally on `getFeatureInfo` method).
+     * This value is used to sample LinesStrings and Polygons contour
      * `50` is the default
      *
      */
     samples?: number;
     /**
-     * To obtain the elevation values on each volume measurement, multiples samples are taken across the polygon.
-     * Value in meters
-     * The bigger the number, the greater the quality of the measurement, but slower response times and
-     * bigger overhead (principally on `getFeatureInfo` method).
-     * `'auto'` is the default. This use 0.5 on small measurements, and 10 in biggers ones
+     * To obtain the elevation values on a volume measurement, multiples samples are taken across the polygon.
+     * The value provided must be in meters. The bigger the number, the greater the quality of the measurement,
+     * but slower response times and bigger overhead (principally on `getFeatureInfo` method).
+     * `'auto'` is the default: this use 0.5 meters samples on small measurements, and 10 meters in biggers ones
      */
     sampleSizeArea?: number | 'auto';
     /**

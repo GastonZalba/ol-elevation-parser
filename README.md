@@ -1,8 +1,18 @@
 # OpenLayers Elevation Parser
 
-Sample Features and retrieve parsed elevation data from Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb (Terrarium, Mapbox or custom processings) elevation models.
+Sample geometries and retrieve parsed elevation data from Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source. Use this to create elevation profiles and/or volume calculations.
 
 Tested with OpenLayers version 6.
+
+## How it works
+
+ol-elevation-parser supports Points, LineStrings and Polygons. Each of these geometries is processed diferently:
+
+-   `Points`: in this case, there is no further processing, the coordinates of each point are consulted according to the configured method (see [calculateZMethod](#calculateZMethod)) and the same supplied coordinates are returned with the z value embedded.
+-   `LineStrings`: here it's necessary to resample the geometry to assemble the profile, and make requests only of those sampled points. The greater the number of samples (see [samples](#samples)), the longer it will take, but the better the quality of the profile will be. In the the sampling, the length of that line is divided into x number of parts to obtain the coordinates of each of the extremes. Then, the vertices of the geometry are also added to those sampled coordinates.
+-   `Polygons`: two different samples are made:
+    -   on the one hand, the contour of the polygon, to which the same procedure as the LineStrings is applied. This contour is useful to obtain the base level that borders the area, which allows the volume of the polygon to be calculated later.
+    -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
 
 ## Usage
 
@@ -27,8 +37,8 @@ var elevationLayer = new TileWMS({
 var options = {
     source: elevationLayer,
     calculateZMethod: 'getFeatureInfo',
-    samples: 50,
-    sampleSizeArea: 'auto', // For polygons area
+    samples: 50, // For LinesStrings and Polygons contour
+    sampleSizeArea: 'auto', // For Polygons area
     noDataValue: -10000
 };
 
@@ -222,17 +232,17 @@ This number is used as equally percentage steps across the geom, plus all the ve
 
 The bigger the number, the greater the quality of the elevation data, but slower response times and
 bigger overhead (principally on `getFeatureInfo` method).
+This value is used to sample LinesStrings and Polygons contour
 `50` is the default
 
 Type: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)
 
 #### sampleSizeArea
 
-To obtain the elevation values on each volume measurement, multiples samples are taken across the polygon.
-Value in meters
-The bigger the number, the greater the quality of the measurement, but slower response times and
-bigger overhead (principally on `getFeatureInfo` method).
-`'auto'` is the default. This use 0.5 on small measurements, and 10 in biggers ones
+To obtain the elevation values on a volume measurement, multiples samples are taken across the polygon.
+The value provided must be in meters. The bigger the number, the greater the quality of the measurement,
+but slower response times and bigger overhead (principally on `getFeatureInfo` method).
+`'auto'` is the default: this use 0.5 meters samples on small measurements, and 10 meters in biggers ones
 
 Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `"auto"`)
 
@@ -257,6 +267,7 @@ Type: [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Glob
 
 -   Improve README and documentation
 -   Add jest
+-   Add check/msg for invalid geometries
 
 ## License
 
