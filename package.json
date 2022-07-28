@@ -2,14 +2,11 @@
   "name": "ol-elevation-parser",
   "version": "1.0.0",
   "description": "Sample geometries and retrieve parsed elevation data from Open Layers sources",
-  "browser": "dist/ol-elevation-parser.min.js",
-  "main": "dist/ol-elevation-parser.js",
   "module": "lib/ol-elevation-parser.js",
   "types": "lib/ol-elevation-parser.d.ts",
   "files": [
     "index.js",
-    "lib/**/*",
-    "dist/**/*"
+    "lib/**/*"
   ],
   "scripts": {
     "watch": "rollup -w --config rollup.config.dist.js --dev",
