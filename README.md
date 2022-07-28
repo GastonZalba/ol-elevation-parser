@@ -49,7 +49,7 @@ map.addControl(elevationParser);
 
 var lineStringFeature = new Feature(new LineString(/*...*/));
 
-const data = await elevationParser.requestZValues(feature);
+const data = await elevationParser.getElevationValues(feature);
 ```
 
 ## Changelog
@@ -84,7 +84,7 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 -   [ElevationParser](#elevationparser)
     -   [Parameters](#parameters)
-    -   [requestZValues](#requestzvalues)
+    -   [getElevationValues](#getelevationvalues)
         -   [Parameters](#parameters-1)
     -   [setSource](#setsource)
         -   [Parameters](#parameters-2)
@@ -96,7 +96,7 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-5)
     -   [setNoDataValue](#setnodatavalue)
         -   [Parameters](#parameters-6)
--   [IRequestZValues](#irequestzvalues)
+-   [IGetElevationValues](#igetelevationvalues)
     -   [gridPolygons](#gridpolygons)
 -   [IElevationCoords](#ielevationcoords)
     -   [mainCoords](#maincoords)
@@ -117,13 +117,13 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 -   `options` **[IOptions](#ioptions)**
 
-#### requestZValues
+#### getElevationValues
 
 ##### Parameters
 
 -   `feature` **Feature<(LineString | Point | Polygon)>**
 
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IRequestZValues](#irequestzvalues)>**
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IGetElevationValues](#igetelevationvalues)>**
 
 #### setSource
 
@@ -165,7 +165,7 @@ Returns **void**
 
 Returns **void**
 
-### IRequestZValues
+### IGetElevationValues
 
 **Extends IElevationCoords**
 

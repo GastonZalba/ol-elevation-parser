@@ -62,9 +62,9 @@ export default class ElevationParser extends Control {
      * @returns
      * @public
      */
-    async requestZValues(
+    async getElevationValues(
         feature: Feature<LineString | Point | Polygon>
-    ): Promise<IRequestZValues> {
+    ): Promise<IGetElevationValues> {
         // Run once
         if (!this._initialized) this._init();
 
@@ -369,7 +369,7 @@ interface ISampledCoords {
 /**
  * @public
  */
-export interface IRequestZValues extends IElevationCoords {
+export interface IGetElevationValues extends IElevationCoords {
     /**
      * Sampled Polygons
      */
@@ -400,7 +400,7 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * If not provided, the zGraph would be not displayed.
      * You can provide a custom function to call an API or other methods to obtain the data.
      */
-    source?:
+    source:
         | TileWMS
         | TileImage
         | XYZ

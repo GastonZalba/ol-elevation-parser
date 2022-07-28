@@ -32,7 +32,7 @@ export default class ElevationParser extends Control {
      * @returns
      * @public
      */
-    requestZValues(feature: Feature<LineString | Point | Polygon>): Promise<IRequestZValues>;
+    getElevationValues(feature: Feature<LineString | Point | Polygon>): Promise<IGetElevationValues>;
     /**
      * @public
      * @param source
@@ -109,7 +109,7 @@ interface ISampledCoords {
 /**
  * @public
  */
-export interface IRequestZValues extends IElevationCoords {
+export interface IGetElevationValues extends IElevationCoords {
     /**
      * Sampled Polygons
      */
@@ -138,7 +138,7 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * If not provided, the zGraph would be not displayed.
      * You can provide a custom function to call an API or other methods to obtain the data.
      */
-    source?: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: IElevationCoords) => Promise<IElevationCoords>);
+    source: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: IElevationCoords) => Promise<IElevationCoords>);
     /**
      * To obtain the elevation values from the diferrents sources, you can:
      * - Calculate the zValues from the rgb pixel data (`TileImage` and `XYZ` source formats need this):
