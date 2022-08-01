@@ -114,6 +114,14 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
+     * @returns
+     */
+    getSource(): IOptions['source'] {
+        return this.get('source');
+    }
+
+    /**
+     * @public
      * @param samples
      */
     setSamples(samples: IOptions['samples']): void {
@@ -161,6 +169,11 @@ export default class ElevationParser extends Control {
 
         const source = this.get('source');
 
+        // Flexible error trigger if multiples coords must be requested.
+        // If only one coord is needed, the error is strict and raised inmediatly
+        // This is useful if multipels coords are needed, and maybe one or two return error
+        const countErrorsLimit = coords.length >= 5 ? 1 : 5;
+
         for (const coord of coords) {
             try {
                 // If there is a new connection (onChange event), abort this
@@ -198,7 +211,7 @@ export default class ElevationParser extends Control {
             } catch (err) {
                 errorCount++;
                 console.error(err);
-                if (errorCount >= 5) {
+                if (errorCount >= countErrorsLimit) {
                     throw err;
                 }
             }
