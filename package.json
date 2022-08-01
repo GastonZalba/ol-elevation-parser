@@ -1,6 +1,6 @@
 {
   "name": "ol-elevation-parser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Sample geometries and retrieve parsed elevation data from Open Layers sources",
   "module": "lib/ol-elevation-parser.js",
   "types": "lib/ol-elevation-parser.d.ts",

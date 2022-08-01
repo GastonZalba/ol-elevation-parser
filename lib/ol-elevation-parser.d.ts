@@ -40,6 +40,11 @@ export default class ElevationParser extends Control {
     setSource(source: IOptions['source']): void;
     /**
      * @public
+     * @returns
+     */
+    getSource(): IOptions['source'];
+    /**
+     * @public
      * @param samples
      */
     setSamples(samples: IOptions['samples']): void;
