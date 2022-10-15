@@ -1,12 +1,24 @@
 # OpenLayers Elevation Parser
 
-Sample geometries and retrieve parsed elevation data from Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source. Use this to create elevation profiles and/or volume calculations.
+<p align="center">
+    <a href="https://www.npmjs.com/package/ol-elevation-parser">
+        <img src="https://img.shields.io/npm/v/ol-elevation-parser.svg" alt="npm version">
+    </a>
+    <a href="https://img.shields.io/npm/dm/ol-elevation-parser">
+        <img alt="npm" src="https://img.shields.io/npm/dm/ol-elevation-parser">
+    </a>
+    <a href="https://github.com/gastonzalba/ol-elevation-parser/blob/master/LICENSE">
+        <img src="https://img.shields.io/npm/l/ol-elevation-parser.svg" alt="license">
+    </a>
+</p>
 
-Tested with OpenLayers version 6.
+Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This wiil sample a provided geometries and then parse the elevation data from differents Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source.
+
+Tested with OpenLayers version 6 and 7.
 
 ## How it works
 
-ol-elevation-parser supports Points, LineStrings and Polygons. Each of these geometries is processed diferently:
+ol-elevation-parser supports calculations from Points, LineStrings and Polygons. Each of these geometries is processed diferently:
 
 -   `Points`: in this case, there is no further processing, the coordinates of each point are consulted according to the configured method (see [calculateZMethod](#calculateZMethod)) and the same supplied coordinates are returned with the z value embedded.
 -   `LineStrings`: here it's necessary to resample the geometry to assemble the profile, and make requests only of those sampled points. The greater the number of samples (see [samples](#samples)), the longer it will take, but the better the quality of the profile will be. In the the sampling, the length of that line is divided into x number of parts to obtain the coordinates of each of the extremes. Then, the vertices of the geometry are also added to those sampled coordinates.
@@ -37,7 +49,7 @@ var elevationLayer = new TileWMS({
 var options = {
     source: elevationLayer,
     calculateZMethod: 'getFeatureInfo',
-    samples: 50, // For LinesStrings and Polygons contour
+    samples: 50, // For LineStrings and Polygons contour
     sampleSizeArea: 'auto', // For Polygons area
     noDataValue: -10000
 };
@@ -64,7 +76,7 @@ NPM package: [ol-elevation-parser](https://www.npmjs.com/package/ol-elevation-pa
 
 Install the package via `npm`
 
-    npm install ol-elevation-parser --save-dev
+    npm install ol-elevation-parser
 
 #### JS
 
@@ -88,6 +100,7 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-1)
     -   [setSource](#setsource)
         -   [Parameters](#parameters-2)
+    -   [getSource](#getsource)
     -   [setSamples](#setsamples)
         -   [Parameters](#parameters-3)
     -   [setSampleSizeArea](#setsamplesizearea)
@@ -132,6 +145,10 @@ Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/
 -   `source` **any**
 
 Returns **void**
+
+#### getSource
+
+Returns **any**
 
 #### setSamples
 
@@ -268,7 +285,4 @@ Type: [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Glob
 -   Improve README and documentation
 -   Add jest
 -   Add check/msg for invalid geometries
-
-## License
-
-MIT (c) Gastón Zalba.
+-   Add live example

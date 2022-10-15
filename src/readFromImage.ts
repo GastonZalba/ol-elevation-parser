@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { PluggableMap } from 'ol';
+import Map from 'ol/Map';
 import View from 'ol/View';
 
 import { Coordinate } from 'ol/coordinate';
@@ -43,7 +43,7 @@ export default class ReadFromImage {
     constructor(
         source: TileImage | XYZ,
         calculateZMethod: IOptions['calculateZMethod'],
-        map: PluggableMap
+        map: Map
     ) {
         this._projection =
             source.getProjection() || map.getView().getProjection();

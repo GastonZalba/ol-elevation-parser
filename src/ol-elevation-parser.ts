@@ -2,7 +2,6 @@ import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import Polygon from 'ol/geom/Polygon';
 import Control, { Options as ControlOptions } from 'ol/control/Control';
-import { PluggableMap } from 'ol';
 import TileImage from 'ol/source/TileImage';
 import TileWMS from 'ol/source/TileWMS';
 import XYZ from 'ol/source/XYZ';
@@ -31,7 +30,6 @@ const AXIOS_TIMEOUT = 5000;
  */
 export default class ElevationParser extends Control {
     protected _options: IOptions;
-    protected _map: PluggableMap;
     protected _countConnections = 0;
     protected _readFromImage: ReadFromImage;
 
