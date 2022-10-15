@@ -1,4 +1,4 @@
-import { PluggableMap } from 'ol';
+import Map from 'ol/Map';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import TileGrid from 'ol/tilegrid/TileGrid';
@@ -17,7 +17,7 @@ export default class ReadFromImage {
     protected _img: HTMLImageElement;
     protected _urlFn: any;
     protected _draws: {};
-    constructor(source: TileImage | XYZ, calculateZMethod: IOptions['calculateZMethod'], map: PluggableMap);
+    constructor(source: TileImage | XYZ, calculateZMethod: IOptions['calculateZMethod'], map: Map);
     read(coordinate: Coordinate): Promise<number>;
     /**
      *

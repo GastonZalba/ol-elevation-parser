@@ -2,7 +2,6 @@ import LineString from 'ol/geom/LineString';
 import Point from 'ol/geom/Point';
 import Polygon from 'ol/geom/Polygon';
 import Control, { Options as ControlOptions } from 'ol/control/Control';
-import { PluggableMap } from 'ol';
 import TileImage from 'ol/source/TileImage';
 import TileWMS from 'ol/source/TileWMS';
 import XYZ from 'ol/source/XYZ';
@@ -21,7 +20,6 @@ import ReadFromImage from './readFromImage';
  */
 export default class ElevationParser extends Control {
     protected _options: IOptions;
-    protected _map: PluggableMap;
     protected _countConnections: number;
     protected _readFromImage: ReadFromImage;
     protected _initialized: boolean;
