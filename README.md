@@ -128,59 +128,59 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 #### Parameters
 
--   `options` **[IOptions](#ioptions)**
+-   `options` **[IOptions](#ioptions)**&#x20;
 
 #### getElevationValues
 
 ##### Parameters
 
--   `feature` **Feature<(LineString | Point | Polygon)>**
+-   `feature` **Feature<(LineString | Point | Polygon)>**&#x20;
 
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IGetElevationValues](#igetelevationvalues)>**
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IGetElevationValues](#igetelevationvalues)>**&#x20;
 
 #### setSource
 
 ##### Parameters
 
--   `source` **any**
+-   `source` **any**&#x20;
 
-Returns **void**
+Returns **void**&#x20;
 
 #### getSource
 
-Returns **any**
+Returns **any**&#x20;
 
 #### setSamples
 
 ##### Parameters
 
--   `samples` **any**
+-   `samples` **any**&#x20;
 
-Returns **void**
+Returns **void**&#x20;
 
 #### setSampleSizeArea
 
 ##### Parameters
 
--   `sampleSizeArea` **any**
+-   `sampleSizeArea` **any**&#x20;
 
-Returns **void**
+Returns **void**&#x20;
 
 #### setCalculateZMethod
 
 ##### Parameters
 
--   `calculateZMethod` **any**
+-   `calculateZMethod` **any**&#x20;
 
-Returns **void**
+Returns **void**&#x20;
 
 #### setNoDataValue
 
 ##### Parameters
 
--   `noDataValue` **any**
+-   `noDataValue` **any**&#x20;
 
-Returns **void**
+Returns **void**&#x20;
 
 ### IGetElevationValues
 
@@ -246,22 +246,21 @@ This number is used as equally percentage steps across the geom, plus all the ve
 
 -   `getFeatureInfo` on TileWMS sources will make one request per sample
 -   `TileImage`and `XYZ` are calculated across each pixel after downloading the required tiles.
+    The bigger the number, the greater the quality of the elevation data, but slower response times and
+    bigger overhead (principally on `getFeatureInfo` method).
+    This value is used to sample LinesStrings and Polygons contour
+    `50` is the default
 
-The bigger the number, the greater the quality of the elevation data, but slower response times and
-bigger overhead (principally on `getFeatureInfo` method).
-This value is used to sample LinesStrings and Polygons contour
-`50` is the default
-
-Type: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)
+Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | function (length: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)): [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number))
 
 #### sampleSizeArea
 
 To obtain the elevation values on a volume measurement, multiples samples are taken across the polygon.
 The value provided must be in meters. The bigger the number, the greater the quality of the measurement,
 but slower response times and bigger overhead (principally on `getFeatureInfo` method).
-`'auto'` is the default: this use 0.5 meters samples on small measurements, and 10 meters in biggers ones
+`'auto'` is the default
 
-Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `"auto"`)
+Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `"auto"` | function (area: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)): [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number))
 
 #### noDataValue
 

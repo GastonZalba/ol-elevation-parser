@@ -10,6 +10,7 @@ import Polygon from 'ol/geom/Polygon';
 import LineString from 'ol/geom/LineString';
 import Feature from 'ol/Feature';
 import GeoJSON from 'ol/format/GeoJSON';
+import { IOptions } from './ol-elevation-parser';
 
 const geojson = new GeoJSON();
 
@@ -39,11 +40,15 @@ export const deepObjectAssign = (target, ...sources) => {
 
 export const getLineSamples = (
     geom: LineString,
-    samples: number
+    nSamples: IOptions['samples']
 ): Coordinate[] => {
-    const stepPercentage = 100 / samples;
-
     const totalLength = geom.getLength();
+
+    if (typeof nSamples === 'function') {
+        nSamples = nSamples(totalLength);
+    }
+
+    const stepPercentage = 100 / nSamples;
 
     const metersSample = totalLength * (stepPercentage / 100);
 
@@ -92,7 +97,7 @@ export const getLineSamples = (
 export const getPolygonSamples = (
     polygonFeature: Feature<Polygon>,
     projection: string,
-    nSamples: number | 'auto'
+    nSamples: IOptions['sampleSizeArea']
 ): Feature<Polygon>[] => {
     const polygon = geojson.writeFeatureObject(polygonFeature, {
         dataProjection: 'EPSG:4326',
@@ -104,11 +109,17 @@ export const getPolygonSamples = (
     let sampleMeters: number;
 
     if (nSamples !== 'auto') {
-        sampleMeters = nSamples;
+        if (typeof nSamples === 'number') {
+            sampleMeters = nSamples;
+        } else if (typeof nSamples === 'function') {
+            sampleMeters = nSamples(areaPol);
+        }
     } else {
         if (areaPol <= 1000) sampleMeters = 0.5;
         else if (areaPol < 10000) sampleMeters = 1;
-        else sampleMeters = 10;
+        else if (areaPol < 100000) sampleMeters = 10;
+        else if (areaPol < 1000000) sampleMeters = 50;
+        else sampleMeters = 100;
     }
 
     const polygonBbox = bbox(polygon);

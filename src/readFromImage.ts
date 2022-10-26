@@ -2,7 +2,6 @@ import axios from 'axios';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
-
 import { Coordinate } from 'ol/coordinate';
 import {
     getForProjection as getTileGridForProjection,
@@ -81,9 +80,9 @@ export default class ReadFromImage {
                     timeout: AXIOS_TIMEOUT,
                     responseType: 'blob'
                 });
+                const imageElement = new Image(256, 256);
                 const urlCreator = window.URL || window.webkitURL;
                 const imageSrc = urlCreator.createObjectURL(data);
-                const imageElement = new Image();
                 await addSrcToImage(imageElement, imageSrc);
                 addTile(tileKey, imageElement);
                 imageTile = imageElement;

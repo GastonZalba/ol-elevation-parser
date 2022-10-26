@@ -8,6 +8,7 @@ import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
+import { Map } from 'ol';
 
 import axios from 'axios';
 
@@ -51,7 +52,6 @@ export default class ElevationParser extends Control {
         }
 
         setLoggerActive(this._options.verbose);
-        this._addPropertyEvents();
     }
 
     /**
@@ -63,9 +63,6 @@ export default class ElevationParser extends Control {
     async getElevationValues(
         feature: Feature<LineString | Point | Polygon>
     ): Promise<IGetElevationValues> {
-        // Run once
-        if (!this._initialized) this._init();
-
         const { sampledCoords: sampleCoords, gridPolygons } =
             this._sampleFeatureCoords(feature);
 
@@ -151,6 +148,19 @@ export default class ElevationParser extends Control {
     }
 
     /**
+     * @protected
+     * @param map
+     */
+    setMap(map: Map): void {
+        super.setMap(map);
+
+        if (map) {
+            // Run once
+            if (!this._initialized) this._init();
+        }
+    }
+
+    /**
      *
      * @param coords
      * @returns
@@ -224,6 +234,8 @@ export default class ElevationParser extends Control {
      */
     _init(): void {
         this._initialized = true;
+
+        this._addPropertyEvents();
 
         this.set('samples', this._options.samples, /* silent = */ true);
 
@@ -451,15 +463,15 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * `50` is the default
      *
      */
-    samples?: number;
+    samples?: number | ((length: number) => number);
 
     /**
      * To obtain the elevation values on a volume measurement, multiples samples are taken across the polygon.
      * The value provided must be in meters. The bigger the number, the greater the quality of the measurement,
      * but slower response times and bigger overhead (principally on `getFeatureInfo` method).
-     * `'auto'` is the default: this use 0.5 meters samples on small measurements, and 10 meters in biggers ones
+     * `'auto'` is the default
      */
-    sampleSizeArea?: number | 'auto';
+    sampleSizeArea?: number | 'auto' | ((area: number) => number);
 
     /**
      * When calculating the zGraph statistics from the raster dataset, you can choose to ignore specific values with the NoDataValue parameter.
