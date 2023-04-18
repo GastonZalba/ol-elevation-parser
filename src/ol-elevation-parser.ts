@@ -8,7 +8,7 @@ import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
-import { Map } from 'ol';
+import Map from 'ol/Map';
 
 import axios from 'axios';
 
@@ -63,7 +63,7 @@ export default class ElevationParser extends Control {
     async getElevationValues(
         feature: Feature<LineString | Point | Polygon>
     ): Promise<IGetElevationValues> {
-        const { sampledCoords: sampleCoords, gridPolygons } =
+        const { sampledCoords, gridPolygons } =
             this._sampleFeatureCoords(feature);
 
         let contourCoords: Coordinate[], mainCoords: Coordinate[];
@@ -74,24 +74,24 @@ export default class ElevationParser extends Control {
             // Use a custom function. Useful for using apis to retrieve the zvalues
             ({ mainCoords, contourCoords } = await source(
                 feature,
-                sampleCoords
+                sampledCoords
             ));
         } else {
             mainCoords = await this._getZFromSampledCoords(
-                sampleCoords.mainCoords
+                sampledCoords.mainCoords
             );
 
             // Only Polygons
-            if (sampleCoords.contourCoords) {
+            if (sampledCoords.contourCoords) {
                 contourCoords = await this._getZFromSampledCoords(
-                    sampleCoords.contourCoords
+                    sampledCoords.contourCoords
                 );
             }
         }
         return {
             mainCoords,
             ...(contourCoords && {
-                contourCoords: contourCoords
+                contourCoords
             }),
             ...(gridPolygons && {
                 gridPolygons
@@ -150,6 +150,7 @@ export default class ElevationParser extends Control {
     /**
      * @protected
      * @param map
+     * @TODO remove events if map is null
      */
     setMap(map: Map): void {
         super.setMap(map);

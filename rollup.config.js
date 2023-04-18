@@ -3,7 +3,7 @@ import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
 import path from 'path';
 
-module.exports = {
+export default {
     input: 'src/ol-elevation-parser.ts',
     treeshake: false,
     output: [
@@ -33,7 +33,7 @@ module.exports = {
                 ]
             ],
             babelHelpers: 'bundled',
-            exclude: ["node_modules/**", "src/assets/**"]
+            exclude: ["node_modules/**"]
         })
     ],
     external: id => !(path.isAbsolute(id) || id.startsWith("."))

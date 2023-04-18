@@ -1,37 +1,22 @@
-import pkg from './package.json';
 import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
-import { terser } from "rollup-plugin-terser";
 import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 
-let globals = {
-    'ol': 'ol',
-    'ol/source': 'ol.source',
-    'ol/layer': 'ol.layer',
-    'ol/View': 'ol.View',
-    'ol/layer/VectorTile': 'ol.layer.VectorTile',
-    'ol/Feature': 'ol.Feature',
-    'ol/geom/LineString': 'ol.geom.LineString',
-    'ol/geom/Point': 'ol.geom.Point',
-    'ol/geom/Geometry': 'ol.geom.Geometry',
-    'ol/layer/Vector': 'ol.layer.Vector',
-    'ol/layer/VectorTile': 'ol.layer.VectorTile',
-    'ol/source/Vector': 'ol.source.Vector',
-    'ol/source/TileWMS': 'ol.source.TileWMS',
-    'ol/source/TileImage': 'ol.source.TileImage',
-    'ol/source/XYZ': 'ol.source.XYZ',    
-    'ol/util': 'ol.util',    
-    'ol/tilegrid': 'ol.tilegrid',
-    'ol/tilegrid/TileGrid': 'ol.tilegrid.TileGrid',
-    'ol/control/Control': 'ol.control.Control',
-    'ol/extent': 'ol.extent',
-    'ol/TileState': 'ol.TileState',
-    'ol/coordinate': 'ol.coordinate',
+const globals = (id) => {
+    const globals = {
+        'axios': 'axios'
+    };
 
-    'axios': 'axios',
+    if (/ol(\\|\/)/.test(id)) {
+        return id.replace(/\//g, '.').replace('.js', '');
+    } else if (id in globals) {
+        return globals[id];
+    }
+
+    return id;
 };
 
 export default function (commandOptions) {
@@ -41,14 +26,6 @@ export default function (commandOptions) {
             {
                 dir: 'dist',
                 format: 'umd',
-                name: 'ElevationParser',
-                globals: globals,
-                sourcemap: true
-            },
-            !commandOptions.dev && {
-                file: pkg.browser,
-                format: 'umd',
-                plugins: [terser()],
                 name: 'ElevationParser',
                 globals: globals,
                 sourcemap: true

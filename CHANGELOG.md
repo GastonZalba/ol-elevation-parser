@@ -11,3 +11,8 @@
 * Improved sampledArea polygons (to avoid crashing on extrelarges polygons)
 * Added function to allow configure the number of `samples` and `sampleSizeArea` on each measurement
 * Added jest, configured some tests
+
+## v1.1.0
+* Added "type" module attribute to package.json
+* Removed index.js
+* Updated dependencies
