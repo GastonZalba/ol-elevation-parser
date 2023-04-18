@@ -8,7 +8,7 @@ import XYZ from 'ol/source/XYZ';
 import View from 'ol/View';
 import { Coordinate } from 'ol/coordinate';
 import Feature from 'ol/Feature';
-import { Map } from 'ol';
+import Map from 'ol/Map';
 import ReadFromImage from './readFromImage';
 /**
  * @extends {ol/control/Control~Control}
@@ -65,6 +65,7 @@ export default class ElevationParser extends Control {
     /**
      * @protected
      * @param map
+     * @TODO remove events if map is null
      */
     setMap(map: Map): void;
     /**
