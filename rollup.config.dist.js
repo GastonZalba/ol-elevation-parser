@@ -45,7 +45,10 @@ export default function (commandOptions) {
                 babelrc: false,
                 plugins: ["@babel/plugin-transform-runtime"],
                 babelHelpers: 'runtime',
-                exclude: 'node_modules/**',
+                include: ['src/**/*'],
+                extensions: [
+                    '.js', '.jsx', '.ts', '.tsx',
+                ],
                 presets: [
                     [
                         '@babel/preset-env',
@@ -62,7 +65,7 @@ export default function (commandOptions) {
                         }
                     ]
                 ]
-            }),        
+            }),
             commandOptions.dev && serve({
                 open: false,
                 verbose: true,
