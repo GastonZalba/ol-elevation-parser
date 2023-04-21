@@ -1,7 +1,7 @@
-import { Coordinate } from 'ol/coordinate';
-import Polygon from 'ol/geom/Polygon';
-import LineString from 'ol/geom/LineString';
-import Feature from 'ol/Feature';
+import { Coordinate } from 'ol/coordinate.js';
+import Polygon from 'ol/geom/Polygon.js';
+import LineString from 'ol/geom/LineString.js';
+import Feature from 'ol/Feature.js';
 import { IOptions } from './ol-elevation-parser';
 /**
  *
