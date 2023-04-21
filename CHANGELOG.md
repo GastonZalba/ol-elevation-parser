@@ -19,3 +19,9 @@
 
 ## v1.1.1
 * Improved rollup and ts configs
+
+## v1.2.0
+* Added ".js" extension on imports to work better with webpack 5 default's config
+* Lib is builded with es2017 target (downgraded from esnext)
+* Removed babel deps
+* Added header to dist files

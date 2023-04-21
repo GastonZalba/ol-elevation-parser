@@ -1,16 +1,16 @@
 import axios from 'axios';
 
-import Map from 'ol/Map';
-import View from 'ol/View';
-import { Coordinate } from 'ol/coordinate';
+import Map from 'ol/Map.js';
+import View from 'ol/View.js';
+import { Coordinate } from 'ol/coordinate.js';
 import {
     getForProjection as getTileGridForProjection,
     createXYZ
-} from 'ol/tilegrid';
-import TileGrid from 'ol/tilegrid/TileGrid';
-import XYZ from 'ol/source/XYZ';
-import TileImage from 'ol/source/TileImage';
-import { Projection } from 'ol/proj';
+} from 'ol/tilegrid.js';
+import TileGrid from 'ol/tilegrid/TileGrid.js';
+import XYZ from 'ol/source/XYZ.js';
+import TileImage from 'ol/source/TileImage.js';
+import { Projection } from 'ol/proj.js';
 
 import { addSrcToImage } from './helpers';
 

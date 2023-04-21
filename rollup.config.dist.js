@@ -1,9 +1,19 @@
-import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
 import del from 'rollup-plugin-delete';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
+import banner2 from 'rollup-plugin-banner2'
+import { readFileSync } from 'fs';
+const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
+
+const banner =
+`/*!
+ * ${pkg.name} - v${pkg.version}
+ * ${pkg.homepage}
+ * Built: ${new Date()}
+*/
+`;
 
 const globals = (id) => {
     const globals = {
@@ -32,6 +42,7 @@ export default function (commandOptions) {
             }
         ],
         plugins: [
+            banner2(() => banner),
             del({ targets: 'dist/*' }),
             typescript(
                 {
@@ -41,31 +52,6 @@ export default function (commandOptions) {
                 }
             ),
             resolve(),
-            babel({
-                babelrc: false,
-                plugins: ["@babel/plugin-transform-runtime"],
-                babelHelpers: 'runtime',
-                include: ['src/**/*'],
-                extensions: [
-                    '.js', '.jsx', '.ts', '.tsx',
-                ],
-                presets: [
-                    [
-                        '@babel/preset-env',
-                        {
-                            targets: {
-                                browsers: [
-                                    "Chrome >= 52",
-                                    "FireFox >= 44",
-                                    "Safari >= 7",
-                                    "Explorer 11",
-                                    "last 4 Edge versions"
-                                ]
-                            }
-                        }
-                    ]
-                ]
-            }),
             commandOptions.dev && serve({
                 open: false,
                 verbose: true,

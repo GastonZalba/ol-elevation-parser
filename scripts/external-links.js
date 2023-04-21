@@ -1,6 +1,4 @@
-'use strict';
-
-const fs = require('fs');
+import fs from 'fs';
 
 const findReplace = [,
     [new RegExp('\\bMap\\b', 'g'), '[Map](https://openlayers.org/en/latest/apidoc/module-ol_Map-Map.html)']
@@ -33,3 +31,5 @@ function main() {
     });
     fs.writeFileSync(fileName, lines.join('\n'), {encoding: "utf8"});
 }
+
+main()

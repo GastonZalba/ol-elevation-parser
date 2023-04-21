@@ -1,7 +1,7 @@
-import Geometry from 'ol/geom/Geometry';
-import VectorSource from 'ol/source/Vector';
-import { getUid } from 'ol/util';
-import TileImage from 'ol/source/TileImage';
+import Geometry from 'ol/geom/Geometry.js';
+import VectorSource from 'ol/source/Vector.js';
+import { getUid } from 'ol/util.js';
+import TileImage from 'ol/source/TileImage.js';
 
 let tiles: { [key: string]: HTMLImageElement } = {};
 

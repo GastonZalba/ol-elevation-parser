@@ -5,11 +5,11 @@ import intersect from '@turf/intersect';
 import { featureCollection } from '@turf/helpers';
 import squareGrid from '@turf/square-grid';
 
-import { Coordinate } from 'ol/coordinate';
-import Polygon from 'ol/geom/Polygon';
-import LineString from 'ol/geom/LineString';
-import Feature from 'ol/Feature';
-import GeoJSON from 'ol/format/GeoJSON';
+import { Coordinate } from 'ol/coordinate.js';
+import Polygon from 'ol/geom/Polygon.js';
+import LineString from 'ol/geom/LineString.js';
+import Feature from 'ol/Feature.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
 import { IOptions } from './ol-elevation-parser';
 
 const geojson = new GeoJSON();
