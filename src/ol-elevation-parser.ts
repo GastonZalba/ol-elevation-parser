@@ -10,6 +10,12 @@ import { Coordinate } from 'ol/coordinate.js';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
 
+import { EventsKey } from 'ol/events.js';
+import BaseEvent from 'ol/events/Event.js';
+import { CombinedOnSignature, EventTypes, OnSignature } from 'ol/Observable.js';
+import { ObjectEvent } from 'ol/Object.js';
+import { Types as ObjectEventTypes } from 'ol/ObjectEventType.js';
+
 import axios from 'axios';
 
 import { addTile, cleanTiles, getTileKey } from './tiles';
@@ -35,6 +41,39 @@ export default class ElevationParser extends Control {
     protected _readFromImage: ReadFromImage;
 
     protected _initialized = false;
+
+    declare on: OnSignature<EventTypes, BaseEvent, EventsKey> &
+        OnSignature<
+            ObjectEventTypes | ElevationParserEventTypes,
+            ObjectEvent,
+            EventsKey
+        > &
+        CombinedOnSignature<
+            ElevationParserEventTypes | ObjectEventTypes | EventTypes,
+            EventsKey
+        >;
+
+    declare once: OnSignature<EventTypes, BaseEvent, EventsKey> &
+        OnSignature<
+            ObjectEventTypes | ElevationParserEventTypes,
+            ObjectEvent,
+            EventsKey
+        > &
+        CombinedOnSignature<
+            ElevationParserEventTypes | ObjectEventTypes | EventTypes,
+            EventsKey
+        >;
+
+    declare un: OnSignature<EventTypes, BaseEvent, void> &
+        OnSignature<
+            ObjectEventTypes | ElevationParserEventTypes,
+            ObjectEvent,
+            void
+        > &
+        CombinedOnSignature<
+            ElevationParserEventTypes | ObjectEventTypes | EventTypes,
+            void
+        >;
 
     constructor(options: IOptions) {
         super({
@@ -148,7 +187,7 @@ export default class ElevationParser extends Control {
     }
 
     /**
-     * @protected
+     * @public
      * @param map
      * @TODO remove events if map is null
      */
@@ -260,7 +299,6 @@ export default class ElevationParser extends Control {
      * @protected
      */
     _addPropertyEvents(): void {
-        // @ts-expect-error
         this.on('change:source', (evt: ObjectEvent) => {
             const source = evt.target.get(evt.key);
             cleanTiles();
@@ -383,6 +421,7 @@ export default class ElevationParser extends Control {
 }
 
 /**
+ * **_[interface]_**
  * @private
  */
 interface ISampledCoords {
@@ -391,6 +430,18 @@ interface ISampledCoords {
 }
 
 /**
+ * **_[type]_**
+ * @public
+ */
+export type ElevationParserEventTypes =
+    | 'change:samples'
+    | 'change:sampleSizeArea'
+    | 'change:source'
+    | 'change:calculateZMethod'
+    | 'change:noDataValue';
+
+/**
+ * **_[interface]_**
  * @public
  */
 export interface IGetElevationValues extends IElevationCoords {
@@ -401,6 +452,7 @@ export interface IGetElevationValues extends IElevationCoords {
 }
 
 /**
+ * **_[interface]_**
  * @public
  */
 export interface IElevationCoords {
@@ -416,6 +468,7 @@ export interface IElevationCoords {
 }
 
 /**
+ * **_[interface]_**
  * @public
  */
 export interface IOptions extends Omit<ControlOptions, 'target'> {

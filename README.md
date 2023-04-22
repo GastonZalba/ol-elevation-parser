@@ -109,6 +109,9 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-5)
     -   [setNoDataValue](#setnodatavalue)
         -   [Parameters](#parameters-6)
+    -   [setMap](#setmap)
+        -   [Parameters](#parameters-7)
+-   [ElevationParserEventTypes](#elevationparsereventtypes)
 -   [IGetElevationValues](#igetelevationvalues)
     -   [gridPolygons](#gridpolygons)
 -   [IElevationCoords](#ielevationcoords)
@@ -182,9 +185,25 @@ Returns **void**&#x20;
 
 Returns **void**&#x20;
 
+#### setMap
+
+##### Parameters
+
+-   `map` **[Map](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map)**&#x20;
+
+Returns **void**&#x20;
+
+### ElevationParserEventTypes
+
+**_\[type]_**
+
+Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"`)
+
 ### IGetElevationValues
 
 **Extends IElevationCoords**
+
+**_\[interface]_**
 
 #### gridPolygons
 
@@ -193,6 +212,8 @@ Sampled Polygons
 Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)\<Feature\<Polygon>>
 
 ### IElevationCoords
+
+**_\[interface]_**
 
 #### mainCoords
 
@@ -210,6 +231,8 @@ Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global
 ### IOptions
 
 **Extends Omit\<ControlOptions, 'target'>**
+
+**_\[interface]_**
 
 #### source
 

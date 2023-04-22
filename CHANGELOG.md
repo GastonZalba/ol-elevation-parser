@@ -25,3 +25,6 @@
 * Lib is builded with es2017 target (downgraded from esnext)
 * Removed babel deps
 * Added header to dist files
+
+## v1.2.1
+* Fixed EventTypes
