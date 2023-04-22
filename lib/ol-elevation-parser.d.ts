@@ -9,6 +9,11 @@ import View from 'ol/View.js';
 import { Coordinate } from 'ol/coordinate.js';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
+import { EventsKey } from 'ol/events.js';
+import BaseEvent from 'ol/events/Event.js';
+import { CombinedOnSignature, EventTypes, OnSignature } from 'ol/Observable.js';
+import { ObjectEvent } from 'ol/Object.js';
+import { Types as ObjectEventTypes } from 'ol/ObjectEventType.js';
 import ReadFromImage from './readFromImage';
 /**
  * @extends {ol/control/Control~Control}
@@ -24,6 +29,9 @@ export default class ElevationParser extends Control {
     protected _countConnections: number;
     protected _readFromImage: ReadFromImage;
     protected _initialized: boolean;
+    on: OnSignature<EventTypes, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
+    once: OnSignature<EventTypes, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
+    un: OnSignature<EventTypes, BaseEvent, void> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, void> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, void>;
     constructor(options: IOptions);
     /**
      *
@@ -63,7 +71,7 @@ export default class ElevationParser extends Control {
      */
     setNoDataValue(noDataValue: IOptions['noDataValue']): void;
     /**
-     * @protected
+     * @public
      * @param map
      * @TODO remove events if map is null
      */
@@ -110,6 +118,7 @@ export default class ElevationParser extends Control {
     _getZValuesFromWMS(coordinate: Coordinate, source: TileWMS, view: View): Promise<number>;
 }
 /**
+ * **_[interface]_**
  * @private
  */
 interface ISampledCoords {
@@ -117,6 +126,12 @@ interface ISampledCoords {
     gridPolygons?: Feature<Polygon>[];
 }
 /**
+ * **_[type]_**
+ * @public
+ */
+export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue';
+/**
+ * **_[interface]_**
  * @public
  */
 export interface IGetElevationValues extends IElevationCoords {
@@ -126,6 +141,7 @@ export interface IGetElevationValues extends IElevationCoords {
     gridPolygons: Feature<Polygon>[];
 }
 /**
+ * **_[interface]_**
  * @public
  */
 export interface IElevationCoords {
@@ -140,6 +156,7 @@ export interface IElevationCoords {
     contourCoords?: Coordinate[];
 }
 /**
+ * **_[interface]_**
  * @public
  */
 export interface IOptions extends Omit<ControlOptions, 'target'> {
