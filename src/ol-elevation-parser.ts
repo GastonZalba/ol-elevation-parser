@@ -19,7 +19,12 @@ import { Types as ObjectEventTypes } from 'ol/ObjectEventType.js';
 import axios from 'axios';
 
 import { addTile, cleanTiles, getTileKey } from './tiles';
-import { deepObjectAssign, getLineSamples, getPolygonSamples } from './helpers';
+import {
+    deepObjectAssign,
+    getLineSamples,
+    getPolygonSamples,
+    getSmoothedCoords
+} from './helpers';
 import defaultOptions from './defaults';
 import logger, { setLoggerActive } from './logger';
 import ReadFromImage from './readFromImage';
@@ -33,6 +38,7 @@ const AXIOS_TIMEOUT = 5000;
  * @fires change:source
  * @fires change:calculateZMethod
  * @fires change:noDataValue
+ * @fires change:smooth
  * @param options
  */
 export default class ElevationParser extends Control {
@@ -180,6 +186,14 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
+     * @param smooth
+     */
+    setSmooth(smooth: IOptions['smooth']): void {
+        this.set('smooth', smooth);
+    }
+
+    /**
+     * @public
      * @param noDataValue
      */
     setNoDataValue(noDataValue: IOptions['noDataValue']): void {
@@ -291,7 +305,9 @@ export default class ElevationParser extends Control {
         );
         this.set('noDataValue', this._options.noDataValue, /* silent = */ true);
 
-        // Need to be the latest
+        this.set('smooth', this._options.smooth, /* silent = */ true);
+
+        // Need to be the latest, fires the change event
         this.set('source', this._options.source, /* silent = */ false);
     }
 
@@ -367,6 +383,9 @@ export default class ElevationParser extends Control {
             );
         } else if (geom instanceof LineString) {
             mainCoords = getLineSamples(geom, this.get('samples'));
+            if (this.get('smooth')) {
+                mainCoords = getSmoothedCoords(mainCoords, this.get('smooth'));
+            }
         }
 
         return {
@@ -526,6 +545,12 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * `'auto'` is the default
      */
     sampleSizeArea?: number | 'auto' | ((area: number) => number);
+
+    /**
+     * Smooth result values on LineStrings measurements
+     * `0` is the default (no smoothing)
+     */
+    smooth?: number;
 
     /**
      * When calculating the zGraph statistics from the raster dataset, you can choose to ignore specific values with the NoDataValue parameter.

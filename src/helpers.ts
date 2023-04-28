@@ -5,6 +5,8 @@ import intersect from '@turf/intersect';
 import { featureCollection } from '@turf/helpers';
 import squareGrid from '@turf/square-grid';
 
+import smooth from 'array-smooth';
+
 import { Coordinate } from 'ol/coordinate.js';
 import Polygon from 'ol/geom/Polygon.js';
 import LineString from 'ol/geom/LineString.js';
@@ -144,7 +146,34 @@ export const getPolygonSamples = (
     }) as Feature<Polygon>[];
 };
 
-export const average = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+/**
+ *
+ * @param arr
+ * @returns
+ */
+export const average = (arr: number[]) =>
+    arr.reduce((a, b) => a + b, 0) / arr.length;
+
+/**
+ *
+ * @param coordsWithZ
+ * @param smoothValue
+ * @returns
+ */
+export const getSmoothedCoords = (
+    coordsWithZ: Coordinate[],
+    smoothValue = 0
+): Coordinate[] => {
+    coordsWithZ = [...coordsWithZ];
+    const zCoords = coordsWithZ.map((coord) => coord[2]);
+
+    const zSmooth = smooth(zCoords, smoothValue);
+
+    return coordsWithZ.map((coord, i) => {
+        coord[2] = zSmooth[i];
+        return coord;
+    });
+};
 
 /**
  *

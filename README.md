@@ -51,7 +51,8 @@ var options = {
     calculateZMethod: 'getFeatureInfo',
     samples: 50, // For LineStrings and Polygons contour
     sampleSizeArea: 'auto', // For Polygons area
-    noDataValue: -10000
+    noDataValue: -10000,
+    smooth: 0
 };
 
 var elevationParser = new ElevationParser(options);

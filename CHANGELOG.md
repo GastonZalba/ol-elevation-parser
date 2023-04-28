@@ -28,3 +28,6 @@
 
 ## v1.2.1
 * Fixed EventTypes
+
+## v1.3.0
+* Added `smooth` option

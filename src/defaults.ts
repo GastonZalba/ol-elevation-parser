@@ -5,6 +5,7 @@ const options: IOptions = {
     source: null,
     calculateZMethod: 'getFeatureInfo',
     samples: 50,
+    smooth: 0,
     sampleSizeArea: 'auto',
     noDataValue: -10000,
     verbose: loggerIsEnabled
