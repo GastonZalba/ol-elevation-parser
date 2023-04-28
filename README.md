@@ -108,10 +108,12 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-4)
     -   [setCalculateZMethod](#setcalculatezmethod)
         -   [Parameters](#parameters-5)
-    -   [setNoDataValue](#setnodatavalue)
+    -   [setSmooth](#setsmooth)
         -   [Parameters](#parameters-6)
-    -   [setMap](#setmap)
+    -   [setNoDataValue](#setnodatavalue)
         -   [Parameters](#parameters-7)
+    -   [setMap](#setmap)
+        -   [Parameters](#parameters-8)
 -   [ElevationParserEventTypes](#elevationparsereventtypes)
 -   [IGetElevationValues](#igetelevationvalues)
     -   [gridPolygons](#gridpolygons)
@@ -123,6 +125,7 @@ TypeScript types are shipped with the project in the dist directory and should b
     -   [calculateZMethod](#calculatezmethod)
     -   [samples](#samples)
     -   [sampleSizeArea](#samplesizearea)
+    -   [smooth](#smooth)
     -   [noDataValue](#nodatavalue)
     -   [verbose](#verbose)
 
@@ -175,6 +178,14 @@ Returns **void**&#x20;
 ##### Parameters
 
 -   `calculateZMethod` **any**&#x20;
+
+Returns **void**&#x20;
+
+#### setSmooth
+
+##### Parameters
+
+-   `smooth` **any**&#x20;
 
 Returns **void**&#x20;
 
@@ -285,6 +296,13 @@ but slower response times and bigger overhead (principally on `getFeatureInfo` m
 `'auto'` is the default
 
 Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `"auto"` | function (area: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)): [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number))
+
+#### smooth
+
+Smooth result values on LineStrings measurements
+`0` is the default (no smoothing)
+
+Type: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)
 
 #### noDataValue
 
