@@ -163,8 +163,6 @@ export const getSmoothedCoords = (
     coordsWithZ: CoordinatesXYZ[],
     smoothValue = 0
 ): CoordinatesXYZ[] => {
-    if (coordsWithZ.length !== 3) return coordsWithZ;
-
     coordsWithZ = [...coordsWithZ];
     const zCoords = coordsWithZ.map((coord) => coord[2]);
 

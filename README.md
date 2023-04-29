@@ -148,7 +148,7 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 -   `feature` **Feature<(LineString | Point | Polygon)>**&#x20;
 
-Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IGetElevationValues](#igetelevationvalues)>**&#x20;
+Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<([IGetElevationValues](#igetelevationvalues) | [Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error))>**&#x20;
 
 #### setSource
 

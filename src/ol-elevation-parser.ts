@@ -112,7 +112,7 @@ export default class ElevationParser extends Control {
      */
     async getElevationValues(
         feature: Feature<LineString | Point | Polygon>
-    ): Promise<IGetElevationValues> {
+    ): Promise<IGetElevationValues | Error> {
         try {
             const { sampledCoords, gridPolygons } =
                 this._sampleFeatureCoords(feature);

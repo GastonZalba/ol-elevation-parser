@@ -35,3 +35,7 @@
 * Replaced `Coordinate` type with `CoordinatesXYZ` and `CoordinatesXY`
 * Some minor type improvements
 * Converted some methods to private
+
+## v1.3.1
+* Fixed small bug preventing `smooth` being applied
+* Added `error` event 
