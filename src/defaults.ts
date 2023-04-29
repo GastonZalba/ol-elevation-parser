@@ -1,7 +1,7 @@
-import { IOptions } from './ol-elevation-parser';
+import { Options } from './ol-elevation-parser';
 import { loggerIsEnabled } from './logger';
 
-const options: IOptions = {
+const options: Options = {
     source: null,
     calculateZMethod: 'getFeatureInfo',
     samples: 50,

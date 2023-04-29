@@ -7,12 +7,11 @@ import squareGrid from '@turf/square-grid';
 
 import smooth from 'array-smooth';
 
-import { Coordinate } from 'ol/coordinate.js';
 import Polygon from 'ol/geom/Polygon.js';
 import LineString from 'ol/geom/LineString.js';
 import Feature from 'ol/Feature.js';
 import GeoJSON from 'ol/format/GeoJSON.js';
-import { IOptions } from './ol-elevation-parser';
+import { CoordinatesXY, CoordinatesXYZ, Options } from './ol-elevation-parser';
 
 const geojson = new GeoJSON();
 
@@ -42,8 +41,8 @@ export const deepObjectAssign = (target, ...sources) => {
 
 export const getLineSamples = (
     geom: LineString,
-    nSamples: IOptions['samples']
-): Coordinate[] => {
+    nSamples: Options['samples']
+): CoordinatesXY[] => {
     const totalLength = geom.getLength();
 
     if (typeof nSamples === 'function') {
@@ -54,11 +53,11 @@ export const getLineSamples = (
 
     const metersSample = totalLength * (stepPercentage / 100);
 
-    const sampledCoords: Coordinate[] = [];
+    const sampledCoords: CoordinatesXY[] = [];
     let segmentCount = 0;
 
     // Get samples every percentage step while conserving all the vertex
-    geom.forEachSegment((start, end) => {
+    geom.forEachSegment((start: CoordinatesXY, end: CoordinatesXY) => {
         // Only get the first start segment
         if (!segmentCount) {
             sampledCoords.push(start);
@@ -80,7 +79,7 @@ export const getLineSamples = (
         while (segmentStepPercent < 100) {
             const coordAt = segmentGeom.getCoordinateAt(
                 segmentStepPercent / 100
-            );
+            ) as CoordinatesXY;
             sampledCoords.push(coordAt);
             segmentStepPercent = segmentStepPercent + newPercentage;
         }
@@ -99,7 +98,7 @@ export const getLineSamples = (
 export const getPolygonSamples = (
     polygonFeature: Feature<Polygon>,
     projection: string,
-    nSamples: IOptions['sampleSizeArea']
+    nSamples: Options['sampleSizeArea']
 ): Feature<Polygon>[] => {
     const polygon = geojson.writeFeatureObject(polygonFeature, {
         dataProjection: 'EPSG:4326',
@@ -161,13 +160,15 @@ export const average = (arr: number[]) =>
  * @returns
  */
 export const getSmoothedCoords = (
-    coordsWithZ: Coordinate[],
+    coordsWithZ: CoordinatesXYZ[],
     smoothValue = 0
-): Coordinate[] => {
+): CoordinatesXYZ[] => {
+    if (coordsWithZ.length !== 3) return coordsWithZ;
+
     coordsWithZ = [...coordsWithZ];
     const zCoords = coordsWithZ.map((coord) => coord[2]);
 
-    const zSmooth = smooth(zCoords, smoothValue);
+    const zSmooth = smooth(zCoords, smoothValue) as number[];
 
     return coordsWithZ.map((coord, i) => {
         coord[2] = zSmooth[i];

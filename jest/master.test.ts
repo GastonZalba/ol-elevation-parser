@@ -27,7 +27,8 @@ const elevationParser = new ElevationParser({
     calculateZMethod: 'Mapbox',
     samples: 250, // For LineStrings and Polygons contour
     sampleSizeArea: 'auto', // For Polygons area
-    noDataValue: -10000
+    noDataValue: -10000,
+    smooth: 0
 });
 
 const olMap = new Map({
@@ -54,6 +55,7 @@ test('Get samples from diferents geometries', async () => {
 
     // POINT
     const featurePoint = new Feature(new Point([-6906022, -4580495]));
+    // @ts-ignore
     const samplesPoint = elevationParser._sampleFeatureCoords(featurePoint);
     expect(samplesPoint.sampledCoords.mainCoords.length).toBe(1);
     expect(samplesPoint.sampledCoords.contourCoords).toBe(undefined);
@@ -67,6 +69,7 @@ test('Get samples from diferents geometries', async () => {
         ])
     );
 
+    // @ts-ignore
     const samplesLine = elevationParser._sampleFeatureCoords(featureLine);
     expect(samplesLine.sampledCoords.mainCoords.length).toBe(251);
     expect(samplesLine.sampledCoords.contourCoords).toBe(undefined);
@@ -84,6 +87,7 @@ test('Get samples from diferents geometries', async () => {
         ])
     );
 
+    // @ts-ignore
     const samplesPol = elevationParser._sampleFeatureCoords(featurePolygon);
     expect(samplesPol.sampledCoords.mainCoords.length).toBe(1549);
     expect(samplesPol!.sampledCoords!.contourCoords!.length).toBe(252);

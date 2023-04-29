@@ -114,13 +114,18 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-7)
     -   [setMap](#setmap)
         -   [Parameters](#parameters-8)
+-   [mainCoords](#maincoords)
+-   [contourCoords](#contourcoords)
 -   [ElevationParserEventTypes](#elevationparsereventtypes)
 -   [IGetElevationValues](#igetelevationvalues)
     -   [gridPolygons](#gridpolygons)
+-   [CoordinatesXYZ](#coordinatesxyz)
+-   [CoordinatesXY](#coordinatesxy)
 -   [IElevationCoords](#ielevationcoords)
-    -   [mainCoords](#maincoords)
-    -   [contourCoords](#contourcoords)
--   [IOptions](#ioptions)
+    -   [mainCoords](#maincoords-1)
+    -   [contourCoords](#contourcoords-1)
+-   [CustomSourceFn](#customsourcefn)
+-   [Options](#options)
     -   [source](#source)
     -   [calculateZMethod](#calculatezmethod)
     -   [samples](#samples)
@@ -135,7 +140,7 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 #### Parameters
 
--   `options` **[IOptions](#ioptions)**&#x20;
+-   `options` **[Options](#options)**&#x20;
 
 #### getElevationValues
 
@@ -205,11 +210,24 @@ Returns **void**&#x20;
 
 Returns **void**&#x20;
 
+### mainCoords
+
+Sampled coordinates from LineStrings, Point coordinates,
+or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
+
+Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)<[CoordinatesXY](#coordinatesxy)>
+
+### contourCoords
+
+Contour coordinates from Polygons features.
+
+Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)<[CoordinatesXY](#coordinatesxy)>
+
 ### ElevationParserEventTypes
 
 **_\[type]_**
 
-Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"`)
+Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"`)
 
 ### IGetElevationValues
 
@@ -220,8 +238,21 @@ Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"ch
 #### gridPolygons
 
 Sampled Polygons
+Useful to to calculate fill and cut values on ovolume measurements
 
 Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)\<Feature\<Polygon>>
+
+### CoordinatesXYZ
+
+**_\[type]_**
+
+Type: \[[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number), [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number), [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)]
+
+### CoordinatesXY
+
+**_\[type]_**
+
+Type: \[[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number), [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)]
 
 ### IElevationCoords
 
@@ -232,15 +263,21 @@ Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global
 Sampled coordinates from LineStrings, Point coordinates,
 or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
 
-Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)\<Coordinate>
+Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)<[CoordinatesXYZ](#coordinatesxyz)>
 
 #### contourCoords
 
 Contour coordinates from Polygons features.
 
-Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)\<Coordinate>
+Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)<[CoordinatesXYZ](#coordinatesxyz)>
 
-### IOptions
+### CustomSourceFn
+
+**_\[type]_**
+
+Type: function (originalFeature: Feature<(LineString | Point | Polygon)>, sampledCoords: any): [Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IElevationCoords](#ielevationcoords)>
+
+### Options
 
 **Extends Omit\<ControlOptions, 'target'>**
 
@@ -252,7 +289,7 @@ Source to obtain the elevation values.
 If not provided, the zGraph would be not displayed.
 You can provide a custom function to call an API or other methods to obtain the data.
 
-Type: (TileWMS | TileImage | XYZ | function (originalFeature: Feature<(LineString | Point | Polygon)>, sampledCoords: [IElevationCoords](#ielevationcoords)): [Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IElevationCoords](#ielevationcoords)>)
+Type: (TileWMS | TileImage | XYZ | [CustomSourceFn](#customsourcefn))
 
 #### calculateZMethod
 

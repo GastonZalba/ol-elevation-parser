@@ -31,3 +31,7 @@
 
 ## v1.3.0
 * Added `smooth` option
+* Added reload on `change:calculateZMethod`
+* Replaced `Coordinate` type with `CoordinatesXYZ` and `CoordinatesXY`
+* Some minor type improvements
+* Converted some methods to private

@@ -15,7 +15,7 @@ import { Projection } from 'ol/proj.js';
 import { addSrcToImage } from './helpers';
 
 import { addTile, getTile, getTileKey } from './tiles';
-import { IOptions } from './ol-elevation-parser';
+import { Options } from './ol-elevation-parser';
 
 const AXIOS_TIMEOUT = 5000;
 
@@ -32,7 +32,7 @@ export default class ReadFromImage {
     protected _projection: Projection;
     protected _source: TileImage | XYZ;
     protected _view: View;
-    protected _calculateZMethod: IOptions['calculateZMethod'];
+    protected _calculateZMethod: Options['calculateZMethod'];
     protected _canvas: HTMLCanvasElement;
     protected _ctx: CanvasRenderingContext2D;
     protected _img: HTMLImageElement;
@@ -41,7 +41,7 @@ export default class ReadFromImage {
 
     constructor(
         source: TileImage | XYZ,
-        calculateZMethod: IOptions['calculateZMethod'],
+        calculateZMethod: Options['calculateZMethod'],
         map: Map
     ) {
         this._projection =

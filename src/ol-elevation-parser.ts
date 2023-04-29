@@ -12,9 +12,15 @@ import Map from 'ol/Map.js';
 
 import { EventsKey } from 'ol/events.js';
 import BaseEvent from 'ol/events/Event.js';
-import { CombinedOnSignature, EventTypes, OnSignature } from 'ol/Observable.js';
+import {
+    CombinedOnSignature,
+    EventTypes,
+    OnSignature,
+    unByKey
+} from 'ol/Observable.js';
 import { ObjectEvent } from 'ol/Object.js';
 import { Types as ObjectEventTypes } from 'ol/ObjectEventType.js';
+import ImageTile from 'ol/ImageTile.js';
 
 import axios from 'axios';
 
@@ -42,7 +48,7 @@ const AXIOS_TIMEOUT = 5000;
  * @param options
  */
 export default class ElevationParser extends Control {
-    protected _options: IOptions;
+    protected _options: Options;
     protected _countConnections = 0;
     protected _readFromImage: ReadFromImage;
 
@@ -81,7 +87,7 @@ export default class ElevationParser extends Control {
             void
         >;
 
-    constructor(options: IOptions) {
+    constructor(options: Options) {
         super({
             element: document.createElement('div')
         });
@@ -98,7 +104,6 @@ export default class ElevationParser extends Control {
 
         setLoggerActive(this._options.verbose);
     }
-
     /**
      *
      * @param feature
@@ -108,47 +113,57 @@ export default class ElevationParser extends Control {
     async getElevationValues(
         feature: Feature<LineString | Point | Polygon>
     ): Promise<IGetElevationValues> {
-        const { sampledCoords, gridPolygons } =
-            this._sampleFeatureCoords(feature);
+        try {
+            const { sampledCoords, gridPolygons } =
+                this._sampleFeatureCoords(feature);
 
-        let contourCoords: Coordinate[], mainCoords: Coordinate[];
+            let contourCoords: CoordinatesXYZ[], mainCoords: CoordinatesXYZ[];
 
-        const source = this.get('source');
+            const source = this.get('source') as Options['source'];
 
-        if (typeof source === 'function') {
-            // Use a custom function. Useful for using apis to retrieve the zvalues
-            ({ mainCoords, contourCoords } = await source(
-                feature,
-                sampledCoords
-            ));
-        } else {
-            mainCoords = await this._getZFromSampledCoords(
-                sampledCoords.mainCoords
-            );
-
-            // Only Polygons
-            if (sampledCoords.contourCoords) {
-                contourCoords = await this._getZFromSampledCoords(
-                    sampledCoords.contourCoords
+            if (typeof source === 'function') {
+                // Use a custom function. Useful for using apis to retrieve the zvalues
+                ({ mainCoords, contourCoords } = await source(
+                    feature,
+                    sampledCoords
+                ));
+            } else {
+                mainCoords = await this._getZFromSampledCoords(
+                    sampledCoords.mainCoords
                 );
+
+                // Only Polygons
+                if (sampledCoords.contourCoords) {
+                    contourCoords = await this._getZFromSampledCoords(
+                        sampledCoords.contourCoords
+                    );
+                }
             }
+
+            if (this.get('smooth')) {
+                mainCoords = getSmoothedCoords(mainCoords, this.get('smooth'));
+            }
+
+            return {
+                mainCoords,
+                ...(contourCoords && {
+                    contourCoords
+                }),
+                ...(gridPolygons && {
+                    gridPolygons
+                })
+            };
+        } catch (err) {
+            this.dispatchEvent('error');
+            return err;
         }
-        return {
-            mainCoords,
-            ...(contourCoords && {
-                contourCoords
-            }),
-            ...(gridPolygons && {
-                gridPolygons
-            })
-        };
     }
 
     /**
      * @public
      * @param source
      */
-    setSource(source: IOptions['source']): void {
+    setSource(source: Options['source']): void {
         this.set('source', source);
     }
 
@@ -156,7 +171,7 @@ export default class ElevationParser extends Control {
      * @public
      * @returns
      */
-    getSource(): IOptions['source'] {
+    getSource(): Options['source'] {
         return this.get('source');
     }
 
@@ -164,7 +179,7 @@ export default class ElevationParser extends Control {
      * @public
      * @param samples
      */
-    setSamples(samples: IOptions['samples']): void {
+    setSamples(samples: Options['samples']): void {
         this.set('samples', samples);
     }
 
@@ -172,7 +187,7 @@ export default class ElevationParser extends Control {
      * @public
      * @param sampleSizeArea
      */
-    setSampleSizeArea(sampleSizeArea: IOptions['sampleSizeArea']): void {
+    setSampleSizeArea(sampleSizeArea: Options['sampleSizeArea']): void {
         this.set('sampleSizeArea', sampleSizeArea);
     }
 
@@ -180,7 +195,7 @@ export default class ElevationParser extends Control {
      * @public
      * @param calculateZMethod
      */
-    setCalculateZMethod(calculateZMethod: IOptions['calculateZMethod']): void {
+    setCalculateZMethod(calculateZMethod: Options['calculateZMethod']): void {
         this.set('calculateZMethod', calculateZMethod);
     }
 
@@ -188,7 +203,7 @@ export default class ElevationParser extends Control {
      * @public
      * @param smooth
      */
-    setSmooth(smooth: IOptions['smooth']): void {
+    setSmooth(smooth: Options['smooth']): void {
         this.set('smooth', smooth);
     }
 
@@ -196,7 +211,7 @@ export default class ElevationParser extends Control {
      * @public
      * @param noDataValue
      */
-    setNoDataValue(noDataValue: IOptions['noDataValue']): void {
+    setNoDataValue(noDataValue: Options['noDataValue']): void {
         this.set('noDataValue', noDataValue);
     }
 
@@ -220,9 +235,9 @@ export default class ElevationParser extends Control {
      * @returns
      * @private
      */
-    _getZFromSampledCoords = async (
+    private _getZFromSampledCoords = async (
         coords: Coordinate[]
-    ): Promise<Coordinate[]> => {
+    ): Promise<CoordinatesXYZ[]> => {
         this._countConnections++;
         const countConnections = this._countConnections;
         let errorCount = 0;
@@ -284,9 +299,9 @@ export default class ElevationParser extends Control {
 
     /**
      * This is trigged once
-     * @protected
+     * @private
      */
-    _init(): void {
+    private _init(): void {
         this._initialized = true;
 
         this._addPropertyEvents();
@@ -312,19 +327,19 @@ export default class ElevationParser extends Control {
     }
 
     /**
-     * @protected
+     * @private
      */
-    _addPropertyEvents(): void {
-        this.on('change:source', (evt: ObjectEvent) => {
-            const source = evt.target.get(evt.key);
-            cleanTiles();
+    private _addPropertyEvents(): void {
+        let tileLoadKey: EventsKey;
 
+        const prepare = () => {
+            const source = this.getSource();
             if (
                 !(source instanceof Function) &&
                 this.get('calculateZMethod') !== 'getFeatureInfo'
             ) {
                 this._readFromImage = new ReadFromImage(
-                    this.get('source'),
+                    source,
                     this.get('calculateZMethod'),
                     this.getMap()
                 );
@@ -332,19 +347,29 @@ export default class ElevationParser extends Control {
                 this._readFromImage = null;
             }
 
+            unByKey(tileLoadKey);
+
             if (source instanceof TileImage) {
                 // This is useful if the source is aready visible on the map,
                 // and some tiles are already downloaded outside this module
-                source.on('tileloadend', ({ tile }) => {
-                    const tileCoord = tile.tileCoord;
+                tileLoadKey = source.on('tileloadend', ({ tile }) => {
+                    const tileCoord = tile.getTileCoord();
                     const tileKey = getTileKey(source, tileCoord);
                     addTile(
                         tileKey,
-                        // @ts-expect-error
-                        tile.getImage()
+                        (tile as ImageTile).getImage() as HTMLImageElement
                     );
                 });
             }
+        };
+
+        this.on('change:calculateZMethod', () => {
+            prepare();
+        });
+
+        this.on('change:source', () => {
+            cleanTiles();
+            prepare();
         });
     }
 
@@ -353,19 +378,19 @@ export default class ElevationParser extends Control {
      *
      * @param feature
      * @returns
-     * @protected
+     * @private
      */
-    _sampleFeatureCoords(
+    private _sampleFeatureCoords(
         feature: Feature<LineString | Point | Polygon>
-    ): ISampledCoords {
+    ): ISampledGeom {
         const geom = feature.getGeometry();
 
         let gridPolygons: Feature<Polygon>[],
-            contourCoords: Coordinate[],
-            mainCoords: Coordinate[]; // For polygons
+            contourCoords: CoordinatesXY[],
+            mainCoords: CoordinatesXY[]; // For polygons
 
         if (geom instanceof Point) {
-            mainCoords = [geom.getCoordinates()];
+            mainCoords = [geom.getCoordinates() as CoordinatesXY];
         } else if (geom instanceof Polygon) {
             const polygonFeature = feature as Feature<Polygon>;
 
@@ -380,12 +405,9 @@ export default class ElevationParser extends Control {
             );
             mainCoords = gridPolygons.map((g) =>
                 g.getGeometry().getInteriorPoint().getCoordinates()
-            );
+            ) as CoordinatesXY[];
         } else if (geom instanceof LineString) {
             mainCoords = getLineSamples(geom, this.get('samples'));
-            if (this.get('smooth')) {
-                mainCoords = getSmoothedCoords(mainCoords, this.get('smooth'));
-            }
         }
 
         return {
@@ -403,7 +425,9 @@ export default class ElevationParser extends Control {
      * @returns
      * @private
      */
-    async _getZValuesFromImage(coordinate: Coordinate): Promise<number> {
+    private async _getZValuesFromImage(
+        coordinate: Coordinate
+    ): Promise<number> {
         return await this._readFromImage.read(coordinate);
     }
 
@@ -415,7 +439,7 @@ export default class ElevationParser extends Control {
      * @returns
      * @private
      */
-    async _getZValuesFromWMS(
+    private async _getZValuesFromWMS(
         coordinate: Coordinate,
         source: TileWMS,
         view: View
@@ -443,8 +467,18 @@ export default class ElevationParser extends Control {
  * **_[interface]_**
  * @private
  */
-interface ISampledCoords {
-    sampledCoords: IElevationCoords;
+interface ISampledGeom {
+    sampledCoords: {
+        /**
+         * Sampled coordinates from LineStrings, Point coordinates,
+         * or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
+         */
+        mainCoords: CoordinatesXY[];
+        /**
+         * Contour coordinates from Polygons features.
+         */
+        contourCoords?: CoordinatesXY[];
+    };
     gridPolygons?: Feature<Polygon>[];
 }
 
@@ -457,7 +491,8 @@ export type ElevationParserEventTypes =
     | 'change:sampleSizeArea'
     | 'change:source'
     | 'change:calculateZMethod'
-    | 'change:noDataValue';
+    | 'change:noDataValue'
+    | 'change:smooth';
 
 /**
  * **_[interface]_**
@@ -466,9 +501,22 @@ export type ElevationParserEventTypes =
 export interface IGetElevationValues extends IElevationCoords {
     /**
      * Sampled Polygons
+     * Useful to to calculate fill and cut values on ovolume measurements
      */
     gridPolygons: Feature<Polygon>[];
 }
+
+/**
+ * **_[type]_**
+ * @public
+ */
+export type CoordinatesXYZ = [number, number, number];
+
+/**
+ * **_[type]_**
+ * @public
+ */
+export type CoordinatesXY = [number, number];
 
 /**
  * **_[interface]_**
@@ -479,31 +527,33 @@ export interface IElevationCoords {
      * Sampled coordinates from LineStrings, Point coordinates,
      * or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
      */
-    mainCoords: Coordinate[];
+    mainCoords: CoordinatesXYZ[];
     /**
      * Contour coordinates from Polygons features.
      */
-    contourCoords?: Coordinate[];
+    contourCoords?: CoordinatesXYZ[];
 }
+
+/**
+ * **_[type]_**
+ * @public
+ */
+export type CustomSourceFn = (
+    originalFeature: Feature<LineString | Point | Polygon>,
+    sampledCoords: ISampledGeom['sampledCoords']
+) => Promise<IElevationCoords>;
 
 /**
  * **_[interface]_**
  * @public
  */
-export interface IOptions extends Omit<ControlOptions, 'target'> {
+export interface Options extends Omit<ControlOptions, 'target'> {
     /**
      * Source to obtain the elevation values.
      * If not provided, the zGraph would be not displayed.
      * You can provide a custom function to call an API or other methods to obtain the data.
      */
-    source:
-        | TileWMS
-        | TileImage
-        | XYZ
-        | ((
-              originalFeature: Feature<LineString | Point | Polygon>,
-              sampledCoords: IElevationCoords
-          ) => Promise<IElevationCoords>);
+    source: TileWMS | TileImage | XYZ | CustomSourceFn;
 
     /**
      * To obtain the elevation values from the diferrents sources, you can:
