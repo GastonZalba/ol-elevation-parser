@@ -38,7 +38,7 @@ export default class ElevationParser extends Control {
      * @returns
      * @public
      */
-    getElevationValues(feature: Feature<LineString | Point | Polygon>): Promise<IGetElevationValues>;
+    getElevationValues(feature: Feature<LineString | Point | Polygon>): Promise<IGetElevationValues | Error>;
     /**
      * @public
      * @param source
