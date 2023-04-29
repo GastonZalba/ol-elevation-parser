@@ -5,8 +5,6 @@ import Control, { Options as ControlOptions } from 'ol/control/Control.js';
 import TileImage from 'ol/source/TileImage.js';
 import TileWMS from 'ol/source/TileWMS.js';
 import XYZ from 'ol/source/XYZ.js';
-import View from 'ol/View.js';
-import { Coordinate } from 'ol/coordinate.js';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
 import { EventsKey } from 'ol/events.js';
@@ -22,17 +20,18 @@ import ReadFromImage from './readFromImage';
  * @fires change:source
  * @fires change:calculateZMethod
  * @fires change:noDataValue
+ * @fires change:smooth
  * @param options
  */
 export default class ElevationParser extends Control {
-    protected _options: IOptions;
+    protected _options: Options;
     protected _countConnections: number;
     protected _readFromImage: ReadFromImage;
     protected _initialized: boolean;
     on: OnSignature<EventTypes, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
     once: OnSignature<EventTypes, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
     un: OnSignature<EventTypes, BaseEvent, void> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, void> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, void>;
-    constructor(options: IOptions);
+    constructor(options: Options);
     /**
      *
      * @param feature
@@ -44,32 +43,37 @@ export default class ElevationParser extends Control {
      * @public
      * @param source
      */
-    setSource(source: IOptions['source']): void;
+    setSource(source: Options['source']): void;
     /**
      * @public
      * @returns
      */
-    getSource(): IOptions['source'];
+    getSource(): Options['source'];
     /**
      * @public
      * @param samples
      */
-    setSamples(samples: IOptions['samples']): void;
+    setSamples(samples: Options['samples']): void;
     /**
      * @public
      * @param sampleSizeArea
      */
-    setSampleSizeArea(sampleSizeArea: IOptions['sampleSizeArea']): void;
+    setSampleSizeArea(sampleSizeArea: Options['sampleSizeArea']): void;
     /**
      * @public
      * @param calculateZMethod
      */
-    setCalculateZMethod(calculateZMethod: IOptions['calculateZMethod']): void;
+    setCalculateZMethod(calculateZMethod: Options['calculateZMethod']): void;
+    /**
+     * @public
+     * @param smooth
+     */
+    setSmooth(smooth: Options['smooth']): void;
     /**
      * @public
      * @param noDataValue
      */
-    setNoDataValue(noDataValue: IOptions['noDataValue']): void;
+    setNoDataValue(noDataValue: Options['noDataValue']): void;
     /**
      * @public
      * @param map
@@ -82,31 +86,31 @@ export default class ElevationParser extends Control {
      * @returns
      * @private
      */
-    _getZFromSampledCoords: (coords: Coordinate[]) => Promise<Coordinate[]>;
+    private _getZFromSampledCoords;
     /**
      * This is trigged once
-     * @protected
+     * @private
      */
-    _init(): void;
+    private _init;
     /**
-     * @protected
+     * @private
      */
-    _addPropertyEvents(): void;
+    private _addPropertyEvents;
     /**
      * Get some sample coords from the geometry while preserving the vertices.
      *
      * @param feature
      * @returns
-     * @protected
+     * @private
      */
-    _sampleFeatureCoords(feature: Feature<LineString | Point | Polygon>): ISampledCoords;
+    private _sampleFeatureCoords;
     /**
      *
      * @param coordinate
      * @returns
      * @private
      */
-    _getZValuesFromImage(coordinate: Coordinate): Promise<number>;
+    private _getZValuesFromImage;
     /**
      *
      * @param coordinate
@@ -115,21 +119,31 @@ export default class ElevationParser extends Control {
      * @returns
      * @private
      */
-    _getZValuesFromWMS(coordinate: Coordinate, source: TileWMS, view: View): Promise<number>;
+    private _getZValuesFromWMS;
 }
 /**
  * **_[interface]_**
  * @private
  */
-interface ISampledCoords {
-    sampledCoords: IElevationCoords;
+interface ISampledGeom {
+    sampledCoords: {
+        /**
+         * Sampled coordinates from LineStrings, Point coordinates,
+         * or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
+         */
+        mainCoords: CoordinatesXY[];
+        /**
+         * Contour coordinates from Polygons features.
+         */
+        contourCoords?: CoordinatesXY[];
+    };
     gridPolygons?: Feature<Polygon>[];
 }
 /**
  * **_[type]_**
  * @public
  */
-export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue';
+export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth';
 /**
  * **_[interface]_**
  * @public
@@ -137,9 +151,20 @@ export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeAre
 export interface IGetElevationValues extends IElevationCoords {
     /**
      * Sampled Polygons
+     * Useful to to calculate fill and cut values on ovolume measurements
      */
     gridPolygons: Feature<Polygon>[];
 }
+/**
+ * **_[type]_**
+ * @public
+ */
+export type CoordinatesXYZ = [number, number, number];
+/**
+ * **_[type]_**
+ * @public
+ */
+export type CoordinatesXY = [number, number];
 /**
  * **_[interface]_**
  * @public
@@ -149,23 +174,28 @@ export interface IElevationCoords {
      * Sampled coordinates from LineStrings, Point coordinates,
      * or sampled coordinates from Polygons, obtained by subdividing the area in multiples squares and getting each center point.
      */
-    mainCoords: Coordinate[];
+    mainCoords: CoordinatesXYZ[];
     /**
      * Contour coordinates from Polygons features.
      */
-    contourCoords?: Coordinate[];
+    contourCoords?: CoordinatesXYZ[];
 }
+/**
+ * **_[type]_**
+ * @public
+ */
+export type CustomSourceFn = (originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: ISampledGeom['sampledCoords']) => Promise<IElevationCoords>;
 /**
  * **_[interface]_**
  * @public
  */
-export interface IOptions extends Omit<ControlOptions, 'target'> {
+export interface Options extends Omit<ControlOptions, 'target'> {
     /**
      * Source to obtain the elevation values.
      * If not provided, the zGraph would be not displayed.
      * You can provide a custom function to call an API or other methods to obtain the data.
      */
-    source: TileWMS | TileImage | XYZ | ((originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: IElevationCoords) => Promise<IElevationCoords>);
+    source: TileWMS | TileImage | XYZ | CustomSourceFn;
     /**
      * To obtain the elevation values from the diferrents sources, you can:
      * - Calculate the zValues from the rgb pixel data (`TileImage` and `XYZ` source formats need this):
@@ -200,6 +230,11 @@ export interface IOptions extends Omit<ControlOptions, 'target'> {
      * `'auto'` is the default
      */
     sampleSizeArea?: number | 'auto' | ((area: number) => number);
+    /**
+     * Smooth result values on LineStrings measurements
+     * `0` is the default (no smoothing)
+     */
+    smooth?: number;
     /**
      * When calculating the zGraph statistics from the raster dataset, you can choose to ignore specific values with the NoDataValue parameter.
      * These values are considerated as transparency, so probably you want these replaced by 0.

@@ -1,8 +1,7 @@
-import { Coordinate } from 'ol/coordinate.js';
 import Polygon from 'ol/geom/Polygon.js';
 import LineString from 'ol/geom/LineString.js';
 import Feature from 'ol/Feature.js';
-import { IOptions } from './ol-elevation-parser';
+import { CoordinatesXY, CoordinatesXYZ, Options } from './ol-elevation-parser';
 /**
  *
  * @param target
@@ -10,14 +9,26 @@ import { IOptions } from './ol-elevation-parser';
  * @returns
  */
 export declare const deepObjectAssign: (target: any, ...sources: any[]) => any;
-export declare const getLineSamples: (geom: LineString, nSamples: IOptions['samples']) => Coordinate[];
+export declare const getLineSamples: (geom: LineString, nSamples: Options['samples']) => CoordinatesXY[];
 /**
  * @param polygonFeature
  * @param nSamples
  * @returns
  */
-export declare const getPolygonSamples: (polygonFeature: Feature<Polygon>, projection: string, nSamples: IOptions['sampleSizeArea']) => Feature<Polygon>[];
-export declare const average: (arr: any) => number;
+export declare const getPolygonSamples: (polygonFeature: Feature<Polygon>, projection: string, nSamples: Options['sampleSizeArea']) => Feature<Polygon>[];
+/**
+ *
+ * @param arr
+ * @returns
+ */
+export declare const average: (arr: number[]) => number;
+/**
+ *
+ * @param coordsWithZ
+ * @param smoothValue
+ * @returns
+ */
+export declare const getSmoothedCoords: (coordsWithZ: CoordinatesXYZ[], smoothValue?: number) => CoordinatesXYZ[];
 /**
  *
  * @param src

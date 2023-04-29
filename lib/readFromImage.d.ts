@@ -5,19 +5,19 @@ import TileGrid from 'ol/tilegrid/TileGrid.js';
 import XYZ from 'ol/source/XYZ.js';
 import TileImage from 'ol/source/TileImage.js';
 import { Projection } from 'ol/proj.js';
-import { IOptions } from './ol-elevation-parser';
+import { Options } from './ol-elevation-parser';
 export default class ReadFromImage {
     protected _tileGrid: TileGrid;
     protected _projection: Projection;
     protected _source: TileImage | XYZ;
     protected _view: View;
-    protected _calculateZMethod: IOptions['calculateZMethod'];
+    protected _calculateZMethod: Options['calculateZMethod'];
     protected _canvas: HTMLCanvasElement;
     protected _ctx: CanvasRenderingContext2D;
     protected _img: HTMLImageElement;
     protected _urlFn: any;
     protected _draws: {};
-    constructor(source: TileImage | XYZ, calculateZMethod: IOptions['calculateZMethod'], map: Map);
+    constructor(source: TileImage | XYZ, calculateZMethod: Options['calculateZMethod'], map: Map);
     read(coordinate: Coordinate): Promise<number>;
     /**
      *
