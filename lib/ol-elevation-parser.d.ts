@@ -21,6 +21,7 @@ import ReadFromImage from './readFromImage';
  * @fires change:calculateZMethod
  * @fires change:noDataValue
  * @fires change:smooth
+ * @fires change:tilesResolution
  * @param options
  */
 export default class ElevationParser extends Control {
@@ -41,39 +42,44 @@ export default class ElevationParser extends Control {
     getElevationValues(feature: Feature<LineString | Point | Polygon>): Promise<IGetElevationValues | Error>;
     /**
      * @public
-     * @param source
-     */
-    setSource(source: Options['source']): void;
-    /**
-     * @public
      * @returns
      */
     getSource(): Options['source'];
     /**
      * @public
+     * @param source
+     */
+    setSource(source: Options['source'], silent?: boolean): void;
+    /**
+     * @public
      * @param samples
      */
-    setSamples(samples: Options['samples']): void;
+    setSamples(samples: Options['samples'], silent?: boolean): void;
     /**
      * @public
      * @param sampleSizeArea
      */
-    setSampleSizeArea(sampleSizeArea: Options['sampleSizeArea']): void;
+    setSampleSizeArea(sampleSizeArea: Options['sampleSizeArea'], silent: boolean): void;
     /**
      * @public
      * @param calculateZMethod
      */
-    setCalculateZMethod(calculateZMethod: Options['calculateZMethod']): void;
+    setCalculateZMethod(calculateZMethod: Options['calculateZMethod'], silent?: boolean): void;
     /**
      * @public
      * @param smooth
      */
-    setSmooth(smooth: Options['smooth']): void;
+    setSmooth(smooth: Options['smooth'], silent?: boolean): void;
     /**
      * @public
      * @param noDataValue
      */
-    setNoDataValue(noDataValue: Options['noDataValue']): void;
+    setNoDataValue(noDataValue: Options['noDataValue'], silent?: boolean): void;
+    /**
+     * @public
+     * @param resolution
+     */
+    settilesResolution(resolution: Options['tilesResolution'], silent?: boolean): void;
     /**
      * @public
      * @param map
@@ -143,7 +149,7 @@ interface ISampledGeom {
  * **_[type]_**
  * @public
  */
-export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth';
+export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:resolution';
 /**
  * **_[interface]_**
  * @public
@@ -191,9 +197,14 @@ export type CustomSourceFn = (originalFeature: Feature<LineString | Point | Poly
  */
 export interface Options extends Omit<ControlOptions, 'target'> {
     /**
-     * Source to obtain the elevation values.
-     * If not provided, the zGraph would be not displayed.
-     * You can provide a custom function to call an API or other methods to obtain the data.
+     *
+     * Source from which it is obtained the elevation values. If not provided, the zGraph would be not displayed.
+     *
+     * If a Raster source is used and the option `resolution` is set to `max`, provide the `maxZoom` attribute
+     * to allow download the data in the higher resolution available.
+     *
+     * Also, you can provide a custom function to call an API or other methods to obtain the data.
+     *
      */
     source: TileWMS | TileImage | XYZ | CustomSourceFn;
     /**
@@ -211,6 +222,21 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      *  - `TileImage` and `XYZ` formats are calculated from the pixel data using `'Mapbox'` preset.
      */
     calculateZMethod?: 'getFeatureInfo' | 'Mapbox' | 'Terrarium' | ((r: number, g: number, b: number) => number);
+    /**
+     * Only used if the source is a raster and `calculateZMethod` is not `getFeatureInfo`.
+     *
+     * This sets the resolution in wich the tiles are downloaded to calculate the z values.
+     *
+     * If `max`, the tiles will be downloaded using the maximum quality possible, but you
+     * have to configure the `maxZoom` attribute of the source to prevent requesting inexisting tiles.
+     * Using `max` provides the maximum quality, but the requests are gonna be in higher number and would be slower.
+     *
+     * ´current´ uses the current view resolution of the map. If the source is visible in the map,
+     * the already downloaded tiles would be used to the calculations so is it's the faster method.
+     *
+     * ´current´ is the default
+     */
+    tilesResolution?: number | 'max' | 'current';
     /**
      * To obtain the elevation values on each distance measurement, multiples samples are taken across the line.
      * This number is used as equally percentage steps across the geom, plus all the vertices positions.
