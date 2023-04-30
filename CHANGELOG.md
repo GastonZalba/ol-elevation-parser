@@ -39,3 +39,7 @@
 ## v1.3.1
 * Fixed small bug preventing `smooth` being applied
 * Added `error` event 
+
+## v1.3.2
+* Added `tilesResolution` options that allows to configure the resolution of the tiles used for the elevation data calculations
+* Added param `silent` to multiple setters methods

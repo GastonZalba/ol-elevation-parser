@@ -12,7 +12,7 @@
     </a>
 </p>
 
-Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This wiil sample a provided geometries and then parse the elevation data from differents Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source.
+Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source.
 
 Tested with OpenLayers version 6 and 7.
 
@@ -24,7 +24,7 @@ ol-elevation-parser supports calculations from Points, LineStrings and Polygons.
 -   `LineStrings`: here it's necessary to resample the geometry to assemble the profile, and make requests only of those sampled points. The greater the number of samples (see [samples](#samples)), the longer it will take, but the better the quality of the profile will be. In the the sampling, the length of that line is divided into x number of parts to obtain the coordinates of each of the extremes. Then, the vertices of the geometry are also added to those sampled coordinates.
 -   `Polygons`: two different samples are made:
     -   on the one hand, the contour of the polygon, to which the same procedure as the LineStrings is applied. This contour is useful to obtain the base level that borders the area, which allows the volume of the polygon to be calculated later.
-    -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
+    -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea)), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
 
 ## Usage
 
@@ -49,6 +49,7 @@ var elevationLayer = new TileWMS({
 var options = {
     source: elevationLayer,
     calculateZMethod: 'getFeatureInfo',
+    tilesResolution: 'current',
     samples: 50, // For LineStrings and Polygons contour
     sampleSizeArea: 'auto', // For Polygons area
     noDataValue: -10000,
@@ -99,9 +100,9 @@ TypeScript types are shipped with the project in the dist directory and should b
     -   [Parameters](#parameters)
     -   [getElevationValues](#getelevationvalues)
         -   [Parameters](#parameters-1)
+    -   [getSource](#getsource)
     -   [setSource](#setsource)
         -   [Parameters](#parameters-2)
-    -   [getSource](#getsource)
     -   [setSamples](#setsamples)
         -   [Parameters](#parameters-3)
     -   [setSampleSizeArea](#setsamplesizearea)
@@ -112,8 +113,10 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-6)
     -   [setNoDataValue](#setnodatavalue)
         -   [Parameters](#parameters-7)
-    -   [setMap](#setmap)
+    -   [settilesResolution](#settilesresolution)
         -   [Parameters](#parameters-8)
+    -   [setMap](#setmap)
+        -   [Parameters](#parameters-9)
 -   [mainCoords](#maincoords)
 -   [contourCoords](#contourcoords)
 -   [ElevationParserEventTypes](#elevationparsereventtypes)
@@ -128,6 +131,7 @@ TypeScript types are shipped with the project in the dist directory and should b
 -   [Options](#options)
     -   [source](#source)
     -   [calculateZMethod](#calculatezmethod)
+    -   [tilesResolution](#tilesresolution)
     -   [samples](#samples)
     -   [sampleSizeArea](#samplesizearea)
     -   [smooth](#smooth)
@@ -150,23 +154,25 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<([IGetElevationValues](#igetelevationvalues) | [Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error))>**&#x20;
 
+#### getSource
+
+Returns **any**&#x20;
+
 #### setSource
 
 ##### Parameters
 
 -   `source` **any**&#x20;
+-   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
-
-#### getSource
-
-Returns **any**&#x20;
 
 #### setSamples
 
 ##### Parameters
 
 -   `samples` **any**&#x20;
+-   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
 
@@ -175,6 +181,7 @@ Returns **void**&#x20;
 ##### Parameters
 
 -   `sampleSizeArea` **any**&#x20;
+-   `silent` **[boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean)**&#x20;
 
 Returns **void**&#x20;
 
@@ -183,6 +190,7 @@ Returns **void**&#x20;
 ##### Parameters
 
 -   `calculateZMethod` **any**&#x20;
+-   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
 
@@ -191,6 +199,7 @@ Returns **void**&#x20;
 ##### Parameters
 
 -   `smooth` **any**&#x20;
+-   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
 
@@ -199,6 +208,16 @@ Returns **void**&#x20;
 ##### Parameters
 
 -   `noDataValue` **any**&#x20;
+-   `silent` (optional, default `false`)
+
+Returns **void**&#x20;
+
+#### settilesResolution
+
+##### Parameters
+
+-   `resolution` **any**&#x20;
+-   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
 
@@ -227,7 +246,7 @@ Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global
 
 **_\[type]_**
 
-Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"`)
+Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:resolution"`)
 
 ### IGetElevationValues
 
@@ -285,9 +304,12 @@ Type: function (originalFeature: Feature<(LineString | Point | Polygon)>, sample
 
 #### source
 
-Source to obtain the elevation values.
-If not provided, the zGraph would be not displayed.
-You can provide a custom function to call an API or other methods to obtain the data.
+Source from which it is obtained the elevation values. If not provided, the zGraph would be not displayed.
+
+If a Raster source is used and the option `resolution` is set to `max`, provide the `maxZoom` attribute
+to allow download the data in the higher resolution available.
+
+Also, you can provide a custom function to call an API or other methods to obtain the data.
 
 Type: (TileWMS | TileImage | XYZ | [CustomSourceFn](#customsourcefn))
 
@@ -310,6 +332,23 @@ By default:
 -   `TileImage` and `XYZ` formats are calculated from the pixel data using `'Mapbox'` preset.
 
 Type: (`"getFeatureInfo"` | `"Mapbox"` | `"Terrarium"` | function (r: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number), g: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number), b: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)): [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number))
+
+#### tilesResolution
+
+Only used if the source is a raster and `calculateZMethod` is not `getFeatureInfo`.
+
+This sets the resolution in wich the tiles are downloaded to calculate the z values.
+
+If `max`, the tiles will be downloaded using the maximum quality possible, but you
+have to configure the `maxZoom` attribute of the source to prevent requesting inexisting tiles.
+Using `max` provides the maximum quality, but the requests are gonna be in higher number and would be slower.
+
+´current´ uses the current view resolution of the map. If the source is visible in the map,
+the already downloaded tiles would be used to the calculations so is it's the faster method.
+
+´current´ is the default
+
+Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `"max"` | `"current"`)
 
 #### samples
 

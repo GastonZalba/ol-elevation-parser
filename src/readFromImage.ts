@@ -8,6 +8,7 @@ import {
     createXYZ
 } from 'ol/tilegrid.js';
 import TileGrid from 'ol/tilegrid/TileGrid.js';
+import TileWMS from 'ol/source/TileWMS.js';
 import XYZ from 'ol/source/XYZ.js';
 import TileImage from 'ol/source/TileImage.js';
 import { Projection } from 'ol/proj.js';
@@ -33,6 +34,7 @@ export default class ReadFromImage {
     protected _source: TileImage | XYZ;
     protected _view: View;
     protected _calculateZMethod: Options['calculateZMethod'];
+    protected _resolution: Options['tilesResolution'];
     protected _canvas: HTMLCanvasElement;
     protected _ctx: CanvasRenderingContext2D;
     protected _img: HTMLImageElement;
@@ -42,6 +44,7 @@ export default class ReadFromImage {
     constructor(
         source: TileImage | XYZ,
         calculateZMethod: Options['calculateZMethod'],
+        resolution: Options['tilesResolution'],
         map: Map
     ) {
         this._projection =
@@ -50,6 +53,7 @@ export default class ReadFromImage {
         this._urlFn = source.getTileUrlFunction();
         this._tileGrid = this._getTileGrid(source);
         this._source = source;
+        this._resolution = resolution;
 
         this._calculateZMethod = calculateZMethod;
 
@@ -61,9 +65,19 @@ export default class ReadFromImage {
         // clear canvas
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
 
+        let resolution: number;
+
+        if (this._resolution === 'current') {
+            resolution = this._view.getResolution();
+        } else if (this._resolution === 'max') {
+            resolution = 0.01;
+        } else {
+            resolution = this._resolution;
+        }
+
         const tileCoord = this._tileGrid.getTileCoordForCoordAndResolution(
             coordinate,
-            this._view.getResolution()
+            resolution
         );
 
         const url = this._urlFn(tileCoord, 1, this._projection);
@@ -146,7 +160,7 @@ export default class ReadFromImage {
      * @param source
      * @returns
      */
-    _getTileGrid(source) {
+    _getTileGrid(source: XYZ | TileImage | TileWMS): TileGrid {
         let tilegrid = source.getTileGrid();
         // If not tileGrid is provided, set a default for XYZ sources
         if (!tilegrid) {

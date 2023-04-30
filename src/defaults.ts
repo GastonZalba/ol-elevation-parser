@@ -8,7 +8,8 @@ const options: Options = {
     smooth: 0,
     sampleSizeArea: 'auto',
     noDataValue: -10000,
-    verbose: loggerIsEnabled
+    verbose: loggerIsEnabled,
+    tilesResolution: 'current'
 };
 
 export default options;

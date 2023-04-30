@@ -45,6 +45,7 @@ const AXIOS_TIMEOUT = 5000;
  * @fires change:calculateZMethod
  * @fires change:noDataValue
  * @fires change:smooth
+ * @fires change:tilesResolution
  * @param options
  */
 export default class ElevationParser extends Control {
@@ -161,58 +162,76 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
-     * @param source
-     */
-    setSource(source: Options['source']): void {
-        this.set('source', source);
-    }
-
-    /**
-     * @public
      * @returns
      */
+
     getSource(): Options['source'] {
         return this.get('source');
     }
 
     /**
      * @public
+     * @param source
+     */
+    setSource(source: Options['source'], silent = false): void {
+        this.set('source', source, silent);
+    }
+
+    /**
+     * @public
      * @param samples
      */
-    setSamples(samples: Options['samples']): void {
-        this.set('samples', samples);
+    setSamples(samples: Options['samples'], silent = false): void {
+        this.set('samples', samples, silent);
     }
 
     /**
      * @public
      * @param sampleSizeArea
      */
-    setSampleSizeArea(sampleSizeArea: Options['sampleSizeArea']): void {
-        this.set('sampleSizeArea', sampleSizeArea);
+    setSampleSizeArea(
+        sampleSizeArea: Options['sampleSizeArea'],
+        silent: boolean
+    ): void {
+        this.set('sampleSizeArea', sampleSizeArea, silent);
     }
 
     /**
      * @public
      * @param calculateZMethod
      */
-    setCalculateZMethod(calculateZMethod: Options['calculateZMethod']): void {
-        this.set('calculateZMethod', calculateZMethod);
+    setCalculateZMethod(
+        calculateZMethod: Options['calculateZMethod'],
+        silent = false
+    ): void {
+        this.set('calculateZMethod', calculateZMethod, silent);
     }
 
     /**
      * @public
      * @param smooth
      */
-    setSmooth(smooth: Options['smooth']): void {
-        this.set('smooth', smooth);
+    setSmooth(smooth: Options['smooth'], silent = false): void {
+        this.set('smooth', smooth, silent);
     }
 
     /**
      * @public
      * @param noDataValue
      */
-    setNoDataValue(noDataValue: Options['noDataValue']): void {
-        this.set('noDataValue', noDataValue);
+    setNoDataValue(noDataValue: Options['noDataValue'], silent = false): void {
+        this.set('noDataValue', noDataValue, silent);
+    }
+
+    /**
+     * @public
+     * @param resolution
+     */
+    settilesResolution(
+        resolution: Options['tilesResolution'],
+        silent = false
+    ): void {
+        this.set('tilesResolution', resolution, silent);
     }
 
     /**
@@ -306,24 +325,29 @@ export default class ElevationParser extends Control {
 
         this._addPropertyEvents();
 
-        this.set('samples', this._options.samples, /* silent = */ true);
+        this.setSamples(this._options.samples, /* silent = */ true);
 
-        this.set(
-            'sampleSizeArea',
+        this.setSampleSizeArea(
             this._options.sampleSizeArea,
             /* silent = */ true
         );
-        this.set(
-            'calculateZMethod',
+
+        this.setCalculateZMethod(
             this._options.calculateZMethod,
             /* silent = */ true
         );
-        this.set('noDataValue', this._options.noDataValue, /* silent = */ true);
 
-        this.set('smooth', this._options.smooth, /* silent = */ true);
+        this.setNoDataValue(this._options.noDataValue, /* silent = */ true);
+
+        this.setSmooth(this._options.smooth, /* silent = */ true);
+
+        this.settilesResolution(
+            this._options.tilesResolution,
+            /* silent = */ true
+        );
 
         // Need to be the latest, fires the change event
-        this.set('source', this._options.source, /* silent = */ false);
+        this.setSource(this._options.source, /* silent = */ false);
     }
 
     /**
@@ -341,6 +365,7 @@ export default class ElevationParser extends Control {
                 this._readFromImage = new ReadFromImage(
                     source,
                     this.get('calculateZMethod'),
+                    this.get('tilesResolution'),
                     this.getMap()
                 );
             } else {
@@ -363,7 +388,7 @@ export default class ElevationParser extends Control {
             }
         };
 
-        this.on('change:calculateZMethod', () => {
+        this.on(['change:calculateZMethod', 'change:resolution'], () => {
             prepare();
         });
 
@@ -492,7 +517,8 @@ export type ElevationParserEventTypes =
     | 'change:source'
     | 'change:calculateZMethod'
     | 'change:noDataValue'
-    | 'change:smooth';
+    | 'change:smooth'
+    | 'change:resolution';
 
 /**
  * **_[interface]_**
@@ -549,9 +575,14 @@ export type CustomSourceFn = (
  */
 export interface Options extends Omit<ControlOptions, 'target'> {
     /**
-     * Source to obtain the elevation values.
-     * If not provided, the zGraph would be not displayed.
-     * You can provide a custom function to call an API or other methods to obtain the data.
+     *
+     * Source from which it is obtained the elevation values. If not provided, the zGraph would be not displayed.
+     *
+     * If a Raster source is used and the option `resolution` is set to `max`, provide the `maxZoom` attribute
+     * to allow download the data in the higher resolution available.
+     *
+     * Also, you can provide a custom function to call an API or other methods to obtain the data.
+     *
      */
     source: TileWMS | TileImage | XYZ | CustomSourceFn;
 
@@ -574,6 +605,22 @@ export interface Options extends Omit<ControlOptions, 'target'> {
         | 'Mapbox'
         | 'Terrarium'
         | ((r: number, g: number, b: number) => number);
+
+    /**
+     * Only used if the source is a raster and `calculateZMethod` is not `getFeatureInfo`.
+     *
+     * This sets the resolution in wich the tiles are downloaded to calculate the z values.
+     *
+     * If `max`, the tiles will be downloaded using the maximum quality possible, but you
+     * have to configure the `maxZoom` attribute of the source to prevent requesting inexisting tiles.
+     * Using `max` provides the maximum quality, but the requests are gonna be in higher number and would be slower.
+     *
+     * ´current´ uses the current view resolution of the map. If the source is visible in the map,
+     * the already downloaded tiles would be used to the calculations so is it's the faster method.
+     *
+     * ´current´ is the default
+     */
+    tilesResolution?: number | 'max' | 'current';
 
     /**
      * To obtain the elevation values on each distance measurement, multiples samples are taken across the line.
