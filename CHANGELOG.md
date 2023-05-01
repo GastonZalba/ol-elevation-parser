@@ -48,3 +48,6 @@
 * Added GeoTIFF support
 * Removed manual cache of tiles
 * Added `bands` option
+
+## v1.3.4
+* Fixed bug with polygon samples
