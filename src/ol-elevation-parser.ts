@@ -5,26 +5,19 @@ import Control, { Options as ControlOptions } from 'ol/control/Control.js';
 import TileImage from 'ol/source/TileImage.js';
 import TileWMS from 'ol/source/TileWMS.js';
 import XYZ from 'ol/source/XYZ.js';
+import GeoTIFF from 'ol/source/GeoTIFF';
 import View from 'ol/View.js';
 import { Coordinate } from 'ol/coordinate.js';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
-
 import { EventsKey } from 'ol/events.js';
 import BaseEvent from 'ol/events/Event.js';
-import {
-    CombinedOnSignature,
-    EventTypes,
-    OnSignature,
-    unByKey
-} from 'ol/Observable.js';
+import { CombinedOnSignature, EventTypes, OnSignature } from 'ol/Observable.js';
 import { ObjectEvent } from 'ol/Object.js';
 import { Types as ObjectEventTypes } from 'ol/ObjectEventType.js';
-import ImageTile from 'ol/ImageTile.js';
 
 import axios from 'axios';
 
-import { addTile, cleanTiles, getTileKey } from './tiles';
 import {
     deepObjectAssign,
     getLineSamples,
@@ -46,6 +39,7 @@ const AXIOS_TIMEOUT = 5000;
  * @fires change:noDataValue
  * @fires change:smooth
  * @fires change:tilesResolution
+ * @fires change:bands
  * @param options
  */
 export default class ElevationParser extends Control {
@@ -227,11 +221,19 @@ export default class ElevationParser extends Control {
      * @public
      * @param resolution
      */
-    settilesResolution(
+    setTilesResolution(
         resolution: Options['tilesResolution'],
         silent = false
     ): void {
         this.set('tilesResolution', resolution, silent);
+    }
+
+    /**
+     * @public
+     * @param bands
+     */
+    setBands(bands: Options['bands'], silent = false): void {
+        this.set('bands', bands, silent);
     }
 
     /**
@@ -341,10 +343,12 @@ export default class ElevationParser extends Control {
 
         this.setSmooth(this._options.smooth, /* silent = */ true);
 
-        this.settilesResolution(
+        this.setTilesResolution(
             this._options.tilesResolution,
             /* silent = */ true
         );
+
+        this.setBands(this._options.bands, /* silent = */ true);
 
         // Need to be the latest, fires the change event
         this.setSource(this._options.source, /* silent = */ false);
@@ -354,48 +358,31 @@ export default class ElevationParser extends Control {
      * @private
      */
     private _addPropertyEvents(): void {
-        let tileLoadKey: EventsKey;
-
-        const prepare = () => {
-            const source = this.getSource();
-            if (
-                !(source instanceof Function) &&
-                this.get('calculateZMethod') !== 'getFeatureInfo'
-            ) {
-                this._readFromImage = new ReadFromImage(
-                    source,
-                    this.get('calculateZMethod'),
-                    this.get('tilesResolution'),
-                    this.getMap()
-                );
-            } else {
-                this._readFromImage = null;
-            }
-
-            unByKey(tileLoadKey);
-
-            if (source instanceof TileImage) {
-                // This is useful if the source is aready visible on the map,
-                // and some tiles are already downloaded outside this module
-                tileLoadKey = source.on('tileloadend', ({ tile }) => {
-                    const tileCoord = tile.getTileCoord();
-                    const tileKey = getTileKey(source, tileCoord);
-                    addTile(
-                        tileKey,
-                        (tile as ImageTile).getImage() as HTMLImageElement
+        this.on(
+            [
+                'change:source',
+                'change:bands',
+                'change:calculateZMethod',
+                'change:resolution'
+            ],
+            () => {
+                const source = this.getSource();
+                if (
+                    !(source instanceof Function) &&
+                    this.get('calculateZMethod') !== 'getFeatureInfo'
+                ) {
+                    this._readFromImage = new ReadFromImage(
+                        source,
+                        this.get('calculateZMethod'),
+                        this.get('tilesResolution'),
+                        this.get('bands'),
+                        this.getMap()
                     );
-                });
+                } else {
+                    this._readFromImage = null;
+                }
             }
-        };
-
-        this.on(['change:calculateZMethod', 'change:resolution'], () => {
-            prepare();
-        });
-
-        this.on('change:source', () => {
-            cleanTiles();
-            prepare();
-        });
+        );
     }
 
     /**
@@ -518,7 +505,8 @@ export type ElevationParserEventTypes =
     | 'change:calculateZMethod'
     | 'change:noDataValue'
     | 'change:smooth'
-    | 'change:resolution';
+    | 'change:resolution'
+    | 'change:bands';
 
 /**
  * **_[interface]_**
@@ -564,6 +552,12 @@ export interface IElevationCoords {
  * **_[type]_**
  * @public
  */
+export type RasterSources = TileWMS | TileImage | XYZ | GeoTIFF;
+
+/**
+ * **_[type]_**
+ * @public
+ */
 export type CustomSourceFn = (
     originalFeature: Feature<LineString | Point | Polygon>,
     sampledCoords: ISampledGeom['sampledCoords']
@@ -584,7 +578,7 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      * Also, you can provide a custom function to call an API or other methods to obtain the data.
      *
      */
-    source: TileWMS | TileImage | XYZ | CustomSourceFn;
+    source: RasterSources | CustomSourceFn;
 
     /**
      * To obtain the elevation values from the diferrents sources, you can:
@@ -607,7 +601,7 @@ export interface Options extends Omit<ControlOptions, 'target'> {
         | ((r: number, g: number, b: number) => number);
 
     /**
-     * Only used if the source is a raster and `calculateZMethod` is not `getFeatureInfo`.
+     * Only used if `calculateZMethod` is not `getFeatureInfo`.
      *
      * This sets the resolution in wich the tiles are downloaded to calculate the z values.
      *
@@ -617,10 +611,18 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      *
      * ´current´ uses the current view resolution of the map. If the source is visible in the map,
      * the already downloaded tiles would be used to the calculations so is it's the faster method.
+     * Doesn't work if source is GeoTIFF and the map is used the view
      *
      * ´current´ is the default
      */
     tilesResolution?: number | 'max' | 'current';
+
+    /**
+     * Only used if `calculateZMethod` is not `getFeatureInfo`.
+     *
+     * Default is 4
+     */
+    bands?: number;
 
     /**
      * To obtain the elevation values on each distance measurement, multiples samples are taken across the line.

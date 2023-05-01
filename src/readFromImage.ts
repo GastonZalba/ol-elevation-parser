@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 import Map from 'ol/Map.js';
 import View from 'ol/View.js';
 import { Coordinate } from 'ol/coordinate.js';
@@ -8,17 +6,12 @@ import {
     createXYZ
 } from 'ol/tilegrid.js';
 import TileGrid from 'ol/tilegrid/TileGrid.js';
-import TileWMS from 'ol/source/TileWMS.js';
 import XYZ from 'ol/source/XYZ.js';
-import TileImage from 'ol/source/TileImage.js';
-import { Projection } from 'ol/proj.js';
+import DataTile, { Data } from 'ol/DataTile.js';
+import ImageTile from 'ol/ImageTile.js';
+import Projection from 'ol/proj/Projection.js';
 
-import { addSrcToImage } from './helpers';
-
-import { addTile, getTile, getTileKey } from './tiles';
-import { Options } from './ol-elevation-parser';
-
-const AXIOS_TIMEOUT = 5000;
+import { Options, RasterSources } from './ol-elevation-parser.js';
 
 const mapboxExtractElevation = (r: number, g: number, b: number): number => {
     return (r * 256 * 256 + g * 256 + b) * 0.1 - 10000;
@@ -29,31 +22,30 @@ const terrariumExtractElevation = (r: number, g: number, b: number): number => {
 };
 
 export default class ReadFromImage {
-    protected _tileGrid: TileGrid;
     protected _projection: Projection;
-    protected _source: TileImage | XYZ;
+    protected _source: RasterSources;
     protected _view: View;
     protected _calculateZMethod: Options['calculateZMethod'];
     protected _resolution: Options['tilesResolution'];
+    protected _bands: Options['bands'];
     protected _canvas: HTMLCanvasElement;
     protected _ctx: CanvasRenderingContext2D;
-    protected _img: HTMLImageElement;
-    protected _urlFn;
-    protected _draws = {};
 
     constructor(
-        source: TileImage | XYZ,
+        source: RasterSources,
         calculateZMethod: Options['calculateZMethod'],
         resolution: Options['tilesResolution'],
+        bands: Options['bands'],
         map: Map
     ) {
         this._projection =
             source.getProjection() || map.getView().getProjection();
         this._view = map.getView();
-        this._urlFn = source.getTileUrlFunction();
-        this._tileGrid = this._getTileGrid(source);
-        this._source = source;
+
         this._resolution = resolution;
+
+        this._source = source;
+        this._bands = bands;
 
         this._calculateZMethod = calculateZMethod;
 
@@ -64,87 +56,111 @@ export default class ReadFromImage {
     async read(coordinate: Coordinate) {
         // clear canvas
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-
         let resolution: number;
 
         if (this._resolution === 'current') {
             resolution = this._view.getResolution();
+            // fallback if the view of a GeoTIFF is used in the map
+            if (!resolution) {
+                resolution = this._view.getMinResolution();
+            }
         } else if (this._resolution === 'max') {
-            resolution = 0.01;
+            resolution =
+                this._source.getResolutions()[
+                    this._source.getResolutions().length - 1
+                ];
         } else {
             resolution = this._resolution;
         }
 
-        const tileCoord = this._tileGrid.getTileCoordForCoordAndResolution(
+        const tileGrid = this._getTileGrid();
+
+        const tileCoord = tileGrid.getTileCoordForCoordAndResolution(
             coordinate,
             resolution
         );
+        const zoom = tileCoord[0];
+        const tileSize = tileGrid.getTileSize(zoom);
 
-        const url = this._urlFn(tileCoord, 1, this._projection);
+        const tile = this._source.getTile(
+            tileCoord[0],
+            tileCoord[1],
+            tileCoord[2],
+            1,
+            this._view.getProjection()
+        );
 
-        const tileKey = getTileKey(this._source, tileCoord);
-        let img;
+        if (tile.getState() !== 2) {
+            await new Promise((resolve) => {
+                const changeListener = () => {
+                    if (tile.getState() === 2) {
+                        // loaded
+                        tile.removeEventListener('change', changeListener);
+                        resolve(null);
+                    } else if (tile.getState() === 3) {
+                        // error
+                        resolve(null);
+                    }
+                };
 
-        if (!this._draws[tileKey]) {
-            let imageTile = getTile(tileKey);
-
-            // Check if the image was already downloaded
-            if (!getTile(tileKey)) {
-                const { data } = await axios.get(url, {
-                    timeout: AXIOS_TIMEOUT,
-                    responseType: 'blob'
-                });
-                const imageElement = new Image(256, 256);
-                const urlCreator = window.URL || window.webkitURL;
-                const imageSrc = urlCreator.createObjectURL(data);
-                await addSrcToImage(imageElement, imageSrc);
-                addTile(tileKey, imageElement);
-                imageTile = imageElement;
-            }
-
-            this._canvas.width = imageTile.width;
-            this._canvas.height = imageTile.height;
-
-            //@ts-expect-error
-            this._ctx.mozImageSmoothingEnabled = false;
-            //@ts-expect-error
-            this._ctx.oImageSmoothingEnabled = false;
-            //@ts-expect-error
-            this._ctx.webkitImageSmoothingEnabled = false;
-            //@ts-expect-error
-            this._ctx.msImageSmoothingEnabled = false;
-            this._ctx.imageSmoothingEnabled = false;
-
-            // Add image to a canvas
-            this._ctx.drawImage(imageTile, 0, 0);
-
-            img = this._ctx.getImageData(
-                0,
-                0,
-                this._canvas.width,
-                this._canvas.height
-            );
-            this._draws[tileKey] = img;
+                tile.addEventListener('change', changeListener);
+                tile.load();
+            });
         }
 
-        img = this._draws[tileKey];
+        let tileData: Data | HTMLImageElement;
 
-        const zoom = tileCoord[0];
-        const origin = this._tileGrid.getOrigin(zoom);
-        const res = this._tileGrid.getResolution(zoom);
-        const tileSize = this._tileGrid.getTileSize(zoom);
+        if (tile instanceof DataTile) {
+            tileData = tile.getData();
+        } else if (tile instanceof ImageTile) {
+            tileData = tile.getImage();
+        }
 
-        const w = Math.floor(
-            ((coordinate[0] - origin[0]) / res) %
-                (tileSize[0] | (tileSize as number))
-        );
-        const h = Math.floor(
-            ((origin[1] - coordinate[1]) / res) %
-                (tileSize[1] | (tileSize as number))
-        );
+        if (!tileData) return;
 
-        const imgData = img.data;
-        const index = (w + h * 256) * 4;
+        //@ts-ignore
+        // sometimes tilesize is wrong, so use tileData if exists
+        const width = tileData.width || tileSize[0] || tileSize;
+
+        //@ts-ignore
+        const height = tileData.height || tileSize[1] || tileSize;
+
+        this._canvas.width = width;
+        this._canvas.height = height;
+
+        //@ts-expect-error
+        this._ctx.mozImageSmoothingEnabled = false;
+        //@ts-expect-error
+        this._ctx.oImageSmoothingEnabled = false;
+        //@ts-expect-error
+        this._ctx.webkitImageSmoothingEnabled = false;
+        //@ts-expect-error
+        this._ctx.msImageSmoothingEnabled = false;
+        this._ctx.imageSmoothingEnabled = false;
+
+        let imageData: ImageData;
+
+        if (tileData instanceof HTMLImageElement) {
+            // Add image to a canvas
+            this._ctx.drawImage(tileData, 0, 0);
+
+            imageData = this._ctx.getImageData(0, 0, width, height);
+        } else {
+            // GeoTIFF
+            imageData = this._ctx.createImageData(width, height);
+            //@ts-expect-error
+            imageData.data.set(tileData as Data);
+        }
+
+        const origin = tileGrid.getOrigin(zoom);
+        const res = tileGrid.getResolution(zoom);
+
+        const w = Math.floor(((coordinate[0] - origin[0]) / res) % width);
+        const h = Math.floor(((origin[1] - coordinate[1]) / res) % height);
+
+        const imgData = imageData.data;
+        const index = (w + h * width) * this._bands;
+
         const pixel = [
             imgData[index + 0],
             imgData[index + 1],
@@ -156,15 +172,14 @@ export default class ReadFromImage {
     }
 
     /**
-     *
-     * @param source
+     * Check if this is now necesary
      * @returns
      */
-    _getTileGrid(source: XYZ | TileImage | TileWMS): TileGrid {
-        let tilegrid = source.getTileGrid();
+    private _getTileGrid(): TileGrid {
+        let tilegrid = this._source.getTileGrid();
         // If not tileGrid is provided, set a default for XYZ sources
         if (!tilegrid) {
-            if (source instanceof XYZ) {
+            if (this._source instanceof XYZ) {
                 const defaultTileGrid = createXYZ();
                 tilegrid = new TileGrid({
                     origin: defaultTileGrid.getOrigin(0),
@@ -179,11 +194,10 @@ export default class ReadFromImage {
     }
 
     /**
-     * @protected
      * @param pixel
      * @returns
      */
-    _extractValuesFromPixelDEM(pixel: number[]): number {
+    private _extractValuesFromPixelDEM(pixel: number[]): number {
         if (
             this._calculateZMethod &&
             typeof this._calculateZMethod === 'function'

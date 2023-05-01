@@ -43,3 +43,8 @@
 ## v1.3.2
 * Added `tilesResolution` options that allows to configure the resolution of the tiles used for the elevation data calculations
 * Added param `silent` to multiple setters methods
+
+## v1.3.3
+* Added GeoTIFF support
+* Removed manual cache of tiles
+* Added `bands` option

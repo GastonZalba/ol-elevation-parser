@@ -147,14 +147,6 @@ export const getPolygonSamples = (
 
 /**
  *
- * @param arr
- * @returns
- */
-export const average = (arr: number[]) =>
-    arr.reduce((a, b) => a + b, 0) / arr.length;
-
-/**
- *
  * @param coordsWithZ
  * @param smoothValue
  * @returns

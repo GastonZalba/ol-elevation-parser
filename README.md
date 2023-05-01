@@ -12,7 +12,7 @@
     </a>
 </p>
 
-Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources (TileWMS, TileImage, XYZ), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source.
+Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources (TileWMS, TileImage, XYZ, GeoTIFF), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source.
 
 Tested with OpenLayers version 6 and 7.
 
@@ -113,10 +113,12 @@ TypeScript types are shipped with the project in the dist directory and should b
         -   [Parameters](#parameters-6)
     -   [setNoDataValue](#setnodatavalue)
         -   [Parameters](#parameters-7)
-    -   [settilesResolution](#settilesresolution)
+    -   [setTilesResolution](#settilesresolution)
         -   [Parameters](#parameters-8)
-    -   [setMap](#setmap)
+    -   [setBands](#setbands)
         -   [Parameters](#parameters-9)
+    -   [setMap](#setmap)
+        -   [Parameters](#parameters-10)
 -   [mainCoords](#maincoords)
 -   [contourCoords](#contourcoords)
 -   [ElevationParserEventTypes](#elevationparsereventtypes)
@@ -127,11 +129,13 @@ TypeScript types are shipped with the project in the dist directory and should b
 -   [IElevationCoords](#ielevationcoords)
     -   [mainCoords](#maincoords-1)
     -   [contourCoords](#contourcoords-1)
+-   [RasterSources](#rastersources)
 -   [CustomSourceFn](#customsourcefn)
 -   [Options](#options)
     -   [source](#source)
     -   [calculateZMethod](#calculatezmethod)
     -   [tilesResolution](#tilesresolution)
+    -   [bands](#bands)
     -   [samples](#samples)
     -   [sampleSizeArea](#samplesizearea)
     -   [smooth](#smooth)
@@ -212,11 +216,20 @@ Returns **void**&#x20;
 
 Returns **void**&#x20;
 
-#### settilesResolution
+#### setTilesResolution
 
 ##### Parameters
 
 -   `resolution` **any**&#x20;
+-   `silent` (optional, default `false`)
+
+Returns **void**&#x20;
+
+#### setBands
+
+##### Parameters
+
+-   `bands` **any**&#x20;
 -   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
@@ -246,7 +259,7 @@ Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global
 
 **_\[type]_**
 
-Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:resolution"`)
+Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:resolution"` | `"change:bands"`)
 
 ### IGetElevationValues
 
@@ -290,6 +303,12 @@ Contour coordinates from Polygons features.
 
 Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array)<[CoordinatesXYZ](#coordinatesxyz)>
 
+### RasterSources
+
+**_\[type]_**
+
+Type: (TileWMS | TileImage | XYZ | GeoTIFF)
+
 ### CustomSourceFn
 
 **_\[type]_**
@@ -311,7 +330,7 @@ to allow download the data in the higher resolution available.
 
 Also, you can provide a custom function to call an API or other methods to obtain the data.
 
-Type: (TileWMS | TileImage | XYZ | [CustomSourceFn](#customsourcefn))
+Type: ([RasterSources](#rastersources) | [CustomSourceFn](#customsourcefn))
 
 #### calculateZMethod
 
@@ -335,7 +354,7 @@ Type: (`"getFeatureInfo"` | `"Mapbox"` | `"Terrarium"` | function (r: [number](h
 
 #### tilesResolution
 
-Only used if the source is a raster and `calculateZMethod` is not `getFeatureInfo`.
+Only used if `calculateZMethod` is not `getFeatureInfo`.
 
 This sets the resolution in wich the tiles are downloaded to calculate the z values.
 
@@ -345,10 +364,19 @@ Using `max` provides the maximum quality, but the requests are gonna be in highe
 
 ´current´ uses the current view resolution of the map. If the source is visible in the map,
 the already downloaded tiles would be used to the calculations so is it's the faster method.
+Doesn't work if source is GeoTIFF and the map is used the view
 
 ´current´ is the default
 
 Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `"max"` | `"current"`)
+
+#### bands
+
+Only used if `calculateZMethod` is not `getFeatureInfo`.
+
+Default is 4
+
+Type: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)
 
 #### samples
 
@@ -399,6 +427,7 @@ Type: [boolean](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Glob
 
 ## TODO
 
+-   Remove axios
 -   Improve README and documentation
 -   Add jest
 -   Add check/msg for invalid geometries
