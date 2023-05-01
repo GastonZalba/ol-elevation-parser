@@ -5,6 +5,7 @@ import Control, { Options as ControlOptions } from 'ol/control/Control.js';
 import TileImage from 'ol/source/TileImage.js';
 import TileWMS from 'ol/source/TileWMS.js';
 import XYZ from 'ol/source/XYZ.js';
+import GeoTIFF from 'ol/source/GeoTIFF';
 import Feature from 'ol/Feature.js';
 import Map from 'ol/Map.js';
 import { EventsKey } from 'ol/events.js';
@@ -22,6 +23,7 @@ import ReadFromImage from './readFromImage';
  * @fires change:noDataValue
  * @fires change:smooth
  * @fires change:tilesResolution
+ * @fires change:bands
  * @param options
  */
 export default class ElevationParser extends Control {
@@ -79,7 +81,12 @@ export default class ElevationParser extends Control {
      * @public
      * @param resolution
      */
-    settilesResolution(resolution: Options['tilesResolution'], silent?: boolean): void;
+    setTilesResolution(resolution: Options['tilesResolution'], silent?: boolean): void;
+    /**
+     * @public
+     * @param bands
+     */
+    setBands(bands: Options['bands'], silent?: boolean): void;
     /**
      * @public
      * @param map
@@ -149,7 +156,7 @@ interface ISampledGeom {
  * **_[type]_**
  * @public
  */
-export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:resolution';
+export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:resolution' | 'change:bands';
 /**
  * **_[interface]_**
  * @public
@@ -190,6 +197,11 @@ export interface IElevationCoords {
  * **_[type]_**
  * @public
  */
+export type RasterSources = TileWMS | TileImage | XYZ | GeoTIFF;
+/**
+ * **_[type]_**
+ * @public
+ */
 export type CustomSourceFn = (originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: ISampledGeom['sampledCoords']) => Promise<IElevationCoords>;
 /**
  * **_[interface]_**
@@ -206,7 +218,7 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      * Also, you can provide a custom function to call an API or other methods to obtain the data.
      *
      */
-    source: TileWMS | TileImage | XYZ | CustomSourceFn;
+    source: RasterSources | CustomSourceFn;
     /**
      * To obtain the elevation values from the diferrents sources, you can:
      * - Calculate the zValues from the rgb pixel data (`TileImage` and `XYZ` source formats need this):
@@ -223,7 +235,7 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      */
     calculateZMethod?: 'getFeatureInfo' | 'Mapbox' | 'Terrarium' | ((r: number, g: number, b: number) => number);
     /**
-     * Only used if the source is a raster and `calculateZMethod` is not `getFeatureInfo`.
+     * Only used if `calculateZMethod` is not `getFeatureInfo`.
      *
      * This sets the resolution in wich the tiles are downloaded to calculate the z values.
      *
@@ -233,10 +245,17 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      *
      * ´current´ uses the current view resolution of the map. If the source is visible in the map,
      * the already downloaded tiles would be used to the calculations so is it's the faster method.
+     * Doesn't work if source is GeoTIFF and the map is used the view
      *
      * ´current´ is the default
      */
     tilesResolution?: number | 'max' | 'current';
+    /**
+     * Only used if `calculateZMethod` is not `getFeatureInfo`.
+     *
+     * Default is 4
+     */
+    bands?: number;
     /**
      * To obtain the elevation values on each distance measurement, multiples samples are taken across the line.
      * This number is used as equally percentage steps across the geom, plus all the vertices positions.

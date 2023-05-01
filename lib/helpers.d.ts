@@ -18,12 +18,6 @@ export declare const getLineSamples: (geom: LineString, nSamples: Options['sampl
 export declare const getPolygonSamples: (polygonFeature: Feature<Polygon>, projection: string, nSamples: Options['sampleSizeArea']) => Feature<Polygon>[];
 /**
  *
- * @param arr
- * @returns
- */
-export declare const average: (arr: number[]) => number;
-/**
- *
  * @param coordsWithZ
  * @param smoothValue
  * @returns
