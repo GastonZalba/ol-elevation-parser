@@ -415,9 +415,13 @@ export default class ElevationParser extends Control {
                 this.getMap().getView().getProjection().getCode(),
                 this.get('sampleSizeArea')
             );
-            mainCoords = gridPolygons.map((g) =>
-                g.getGeometry().getInteriorPoint().getCoordinates()
-            ) as CoordinatesXY[];
+            mainCoords = gridPolygons.map((g) => {
+                const coords = g
+                    .getGeometry()
+                    .getInteriorPoint()
+                    .getCoordinates();
+                return [coords[0], coords[1]];
+            });
         } else if (geom instanceof LineString) {
             mainCoords = getLineSamples(geom, this.get('samples'));
         }
