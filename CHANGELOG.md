@@ -51,3 +51,6 @@
 
 ## v1.3.4
 * Fixed bug with polygon samples
+
+## v1.3.5
+* Improved warning messages on wrong resolutions, and use fallback

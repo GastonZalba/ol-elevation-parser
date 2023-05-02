@@ -62,15 +62,20 @@ export default class ReadFromImage {
             resolution = this._view.getResolution();
             // fallback if the view of a GeoTIFF is used in the map
             if (!resolution) {
-                resolution = this._view.getMinResolution();
+                console.warn('Cannot calculate current view resolution');
             }
         } else if (this._resolution === 'max') {
-            resolution =
-                this._source.getResolutions()[
-                    this._source.getResolutions().length - 1
-                ];
+            const resolutions = this._getTileGrid().getResolutions();
+            if (resolutions) resolution = resolutions[resolutions.length - 1];
+            else console.warn("Cannot calculate source's max resolution");
         } else {
+            // resolution is a explicit number provided in the config
             resolution = this._resolution;
+        }
+
+        if (!resolution) {
+            resolution = this._view.getMinResolution() || 0.01;
+            console.warn('Using fallback resolution:', resolution);
         }
 
         const tileGrid = this._getTileGrid();
