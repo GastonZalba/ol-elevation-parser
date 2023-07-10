@@ -54,3 +54,6 @@
 
 ## v1.3.5
 * Improved warning messages on wrong resolutions, and use fallback
+
+## v1.3.6
+* Fixed deepObjectAssign function mutating the defaults options (preventing running two instances with different configs)

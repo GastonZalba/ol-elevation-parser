@@ -87,7 +87,7 @@ export default class ElevationParser extends Control {
             element: document.createElement('div')
         });
 
-        this._options = deepObjectAssign(defaultOptions, options);
+        this._options = deepObjectAssign({}, defaultOptions, options);
 
         // Change the default 'getFeatureInfo' method if the source is not TileWMS
         if (
