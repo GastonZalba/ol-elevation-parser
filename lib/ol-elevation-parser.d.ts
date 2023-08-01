@@ -79,9 +79,9 @@ export default class ElevationParser extends Control {
     setNoDataValue(noDataValue: Options['noDataValue'], silent?: boolean): void;
     /**
      * @public
-     * @param resolution
+     * @param tilesResolution
      */
-    setTilesResolution(resolution: Options['tilesResolution'], silent?: boolean): void;
+    setTilesResolution(tilesResolution: Options['tilesResolution'], silent?: boolean): void;
     /**
      * @public
      * @param bands
@@ -156,7 +156,7 @@ interface ISampledGeom {
  * **_[type]_**
  * @public
  */
-export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:resolution' | 'change:bands';
+export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:bands' | 'change:tilesResolution';
 /**
  * **_[interface]_**
  * @public
