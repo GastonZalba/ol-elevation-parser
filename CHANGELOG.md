@@ -57,3 +57,6 @@
 
 ## v1.3.6
 * Fixed deepObjectAssign function mutating the defaults options (preventing running two instances with different configs)
+
+## v1.3.7
+* Fixed type event, from `change:resolution` to `change:tilesResolution` 

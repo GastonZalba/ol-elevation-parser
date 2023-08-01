@@ -219,13 +219,13 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
-     * @param resolution
+     * @param tilesResolution
      */
     setTilesResolution(
-        resolution: Options['tilesResolution'],
+        tilesResolution: Options['tilesResolution'],
         silent = false
     ): void {
-        this.set('tilesResolution', resolution, silent);
+        this.set('tilesResolution', tilesResolution, silent);
     }
 
     /**
@@ -363,7 +363,7 @@ export default class ElevationParser extends Control {
                 'change:source',
                 'change:bands',
                 'change:calculateZMethod',
-                'change:resolution'
+                'change:tilesResolution'
             ],
             () => {
                 const source = this.getSource();
@@ -509,8 +509,8 @@ export type ElevationParserEventTypes =
     | 'change:calculateZMethod'
     | 'change:noDataValue'
     | 'change:smooth'
-    | 'change:resolution'
-    | 'change:bands';
+    | 'change:bands'
+    | 'change:tilesResolution';
 
 /**
  * **_[interface]_**

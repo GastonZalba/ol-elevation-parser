@@ -220,7 +220,7 @@ Returns **void**&#x20;
 
 ##### Parameters
 
--   `resolution` **any**&#x20;
+-   `tilesResolution` **any**&#x20;
 -   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
@@ -259,7 +259,7 @@ Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global
 
 **_\[type]_**
 
-Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:resolution"` | `"change:bands"`)
+Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:bands"` | `"change:tilesResolution"`)
 
 ### IGetElevationValues
 
