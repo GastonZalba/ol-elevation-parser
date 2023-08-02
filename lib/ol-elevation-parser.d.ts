@@ -54,9 +54,19 @@ export default class ElevationParser extends Control {
     setSource(source: Options['source'], silent?: boolean): void;
     /**
      * @public
+     * @returns
+     */
+    getSamples(): Options['samples'];
+    /**
+     * @public
      * @param samples
      */
     setSamples(samples: Options['samples'], silent?: boolean): void;
+    /**
+     * @public
+     * @returns
+     */
+    getSampleSizeArea(): Options['sampleSizeArea'];
     /**
      * @public
      * @param sampleSizeArea
@@ -64,9 +74,19 @@ export default class ElevationParser extends Control {
     setSampleSizeArea(sampleSizeArea: Options['sampleSizeArea'], silent: boolean): void;
     /**
      * @public
+     * @returns
+     */
+    getCalculateZMethod(): Options['calculateZMethod'];
+    /**
+     * @public
      * @param calculateZMethod
      */
     setCalculateZMethod(calculateZMethod: Options['calculateZMethod'], silent?: boolean): void;
+    /**
+     * @public
+     * @returns
+     */
+    getSmooth(): Options['smooth'];
     /**
      * @public
      * @param smooth
@@ -74,9 +94,19 @@ export default class ElevationParser extends Control {
     setSmooth(smooth: Options['smooth'], silent?: boolean): void;
     /**
      * @public
+     * @returns
+     */
+    getNoDataValue(): Options['noDataValue'];
+    /**
+     * @public
      * @param noDataValue
      */
     setNoDataValue(noDataValue: Options['noDataValue'], silent?: boolean): void;
+    /**
+     * @public
+     * @returns
+     */
+    getTilesResolution(): Options['tilesResolution'];
     /**
      * @public
      * @param tilesResolution
@@ -84,9 +114,24 @@ export default class ElevationParser extends Control {
     setTilesResolution(tilesResolution: Options['tilesResolution'], silent?: boolean): void;
     /**
      * @public
+     * @returns
+     */
+    getBands(): Options['bands'];
+    /**
+     * @public
      * @param bands
      */
     setBands(bands: Options['bands'], silent?: boolean): void;
+    /**
+     * @public
+     * @returns
+     */
+    getTimeout(): Options['timeout'];
+    /**
+     * @public
+     * @param timeout
+     */
+    setTimeout(timeout: Options['timeout'], silent?: boolean): void;
     /**
      * @public
      * @param map
@@ -156,7 +201,7 @@ interface ISampledGeom {
  * **_[type]_**
  * @public
  */
-export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:bands' | 'change:tilesResolution';
+export type ElevationParserEventTypes = 'change:samples' | 'change:sampleSizeArea' | 'change:source' | 'change:calculateZMethod' | 'change:noDataValue' | 'change:smooth' | 'change:bands' | 'change:tilesResolution' | 'change:timeout';
 /**
  * **_[interface]_**
  * @public
@@ -288,6 +333,12 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      * `false` to disable
      */
     noDataValue?: number | false;
+    /**
+     * Timeout in ms to wait before close the requests
+     *
+     * `5000` ms is the default
+     */
+    timeout?: number;
     /**
      * console.log to help debug the code
      * `false` is the default
