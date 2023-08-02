@@ -16,8 +16,6 @@ import { CombinedOnSignature, EventTypes, OnSignature } from 'ol/Observable.js';
 import { ObjectEvent } from 'ol/Object.js';
 import { Types as ObjectEventTypes } from 'ol/ObjectEventType.js';
 
-import axios from 'axios';
-
 import {
     deepObjectAssign,
     getLineSamples,
@@ -27,8 +25,6 @@ import {
 import defaultOptions from './defaults';
 import logger, { setLoggerActive } from './logger';
 import ReadFromImage from './readFromImage';
-
-const AXIOS_TIMEOUT = 5000;
 
 /**
  * @extends {ol/control/Control~Control}
@@ -99,6 +95,7 @@ export default class ElevationParser extends Control {
 
         setLoggerActive(this._options.verbose);
     }
+
     /**
      *
      * @param feature
@@ -158,7 +155,6 @@ export default class ElevationParser extends Control {
      * @public
      * @returns
      */
-
     getSource(): Options['source'] {
         return this.get('source');
     }
@@ -173,10 +169,26 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
+     * @returns
+     */
+    getSamples(): Options['samples'] {
+        return this.get('samples');
+    }
+
+    /**
+     * @public
      * @param samples
      */
     setSamples(samples: Options['samples'], silent = false): void {
         this.set('samples', samples, silent);
+    }
+
+    /**
+     * @public
+     * @returns
+     */
+    getSampleSizeArea(): Options['sampleSizeArea'] {
+        return this.get('sampleSizeArea');
     }
 
     /**
@@ -192,6 +204,14 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
+     * @returns
+     */
+    getCalculateZMethod(): Options['calculateZMethod'] {
+        return this.get('calculateZMethod');
+    }
+
+    /**
+     * @public
      * @param calculateZMethod
      */
     setCalculateZMethod(
@@ -199,6 +219,14 @@ export default class ElevationParser extends Control {
         silent = false
     ): void {
         this.set('calculateZMethod', calculateZMethod, silent);
+    }
+
+    /**
+     * @public
+     * @returns
+     */
+    getSmooth(): Options['smooth'] {
+        return this.get('smooth');
     }
 
     /**
@@ -211,10 +239,26 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
+     * @returns
+     */
+    getNoDataValue(): Options['noDataValue'] {
+        return this.get('noDataValue');
+    }
+
+    /**
+     * @public
      * @param noDataValue
      */
     setNoDataValue(noDataValue: Options['noDataValue'], silent = false): void {
         this.set('noDataValue', noDataValue, silent);
+    }
+
+    /**
+     * @public
+     * @returns
+     */
+    getTilesResolution(): Options['tilesResolution'] {
+        return this.get('tilesResolution');
     }
 
     /**
@@ -230,10 +274,34 @@ export default class ElevationParser extends Control {
 
     /**
      * @public
+     * @returns
+     */
+    getBands(): Options['bands'] {
+        return this.get('bands');
+    }
+
+    /**
+     * @public
      * @param bands
      */
     setBands(bands: Options['bands'], silent = false): void {
         this.set('bands', bands, silent);
+    }
+
+    /**
+     * @public
+     * @returns
+     */
+    getTimeout(): Options['timeout'] {
+        return this.get('timeout');
+    }
+
+    /**
+     * @public
+     * @param timeout
+     */
+    setTimeout(timeout: Options['timeout'], silent = false): void {
+        this.set('timeout', timeout, silent);
     }
 
     /**
@@ -349,6 +417,8 @@ export default class ElevationParser extends Control {
         );
 
         this.setBands(this._options.bands, /* silent = */ true);
+
+        this.setTimeout(this._options.timeout, /* silent = */ true);
 
         // Need to be the latest, fires the change event
         this.setSource(this._options.source, /* silent = */ false);
@@ -471,9 +541,11 @@ export default class ElevationParser extends Control {
             }
         );
 
-        const { data } = await axios.get(url, {
-            timeout: AXIOS_TIMEOUT
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(this.getTimeout())
         });
+
+        const data = await response.json();
 
         return data.features[0].properties.GRAY_INDEX;
     }
@@ -510,7 +582,8 @@ export type ElevationParserEventTypes =
     | 'change:noDataValue'
     | 'change:smooth'
     | 'change:bands'
-    | 'change:tilesResolution';
+    | 'change:tilesResolution'
+    | 'change:timeout';
 
 /**
  * **_[interface]_**
@@ -663,6 +736,13 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      * `false` to disable
      */
     noDataValue?: number | false;
+
+    /**
+     * Timeout in ms to wait before close the requests
+     *
+     * `5000` ms is the default
+     */
+    timeout?: number;
 
     /**
      * console.log to help debug the code

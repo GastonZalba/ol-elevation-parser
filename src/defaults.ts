@@ -10,6 +10,7 @@ const options: Options = {
     smooth: 0,
     sampleSizeArea: 'auto',
     noDataValue: -10000,
+    timeout: 5000,
     verbose: loggerIsEnabled
 };
 

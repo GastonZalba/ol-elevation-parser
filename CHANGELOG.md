@@ -60,3 +60,8 @@
 
 ## v1.3.7
 * Fixed type event, from `change:resolution` to `change:tilesResolution` 
+
+## v1.3.8
+* Added public methods: `getBands`, `getTilesResolution`, `getNoDataValue`, `getSmooth`, `getSampleSizeArea`, `getSamples`
+* Replaced dependency `Axios` with native `fetch`
+* Added option `timeout`

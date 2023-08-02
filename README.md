@@ -103,22 +103,32 @@ TypeScript types are shipped with the project in the dist directory and should b
     -   [getSource](#getsource)
     -   [setSource](#setsource)
         -   [Parameters](#parameters-2)
+    -   [getSamples](#getsamples)
     -   [setSamples](#setsamples)
         -   [Parameters](#parameters-3)
+    -   [getSampleSizeArea](#getsamplesizearea)
     -   [setSampleSizeArea](#setsamplesizearea)
         -   [Parameters](#parameters-4)
+    -   [getCalculateZMethod](#getcalculatezmethod)
     -   [setCalculateZMethod](#setcalculatezmethod)
         -   [Parameters](#parameters-5)
+    -   [getSmooth](#getsmooth)
     -   [setSmooth](#setsmooth)
         -   [Parameters](#parameters-6)
+    -   [getNoDataValue](#getnodatavalue)
     -   [setNoDataValue](#setnodatavalue)
         -   [Parameters](#parameters-7)
+    -   [getTilesResolution](#gettilesresolution)
     -   [setTilesResolution](#settilesresolution)
         -   [Parameters](#parameters-8)
+    -   [getBands](#getbands)
     -   [setBands](#setbands)
         -   [Parameters](#parameters-9)
-    -   [setMap](#setmap)
+    -   [getTimeout](#gettimeout)
+    -   [setTimeout](#settimeout)
         -   [Parameters](#parameters-10)
+    -   [setMap](#setmap)
+        -   [Parameters](#parameters-11)
 -   [mainCoords](#maincoords)
 -   [contourCoords](#contourcoords)
 -   [ElevationParserEventTypes](#elevationparsereventtypes)
@@ -140,6 +150,7 @@ TypeScript types are shipped with the project in the dist directory and should b
     -   [sampleSizeArea](#samplesizearea)
     -   [smooth](#smooth)
     -   [noDataValue](#nodatavalue)
+    -   [timeout](#timeout)
     -   [verbose](#verbose)
 
 ### ElevationParser
@@ -171,6 +182,10 @@ Returns **any**&#x20;
 
 Returns **void**&#x20;
 
+#### getSamples
+
+Returns **any**&#x20;
+
 #### setSamples
 
 ##### Parameters
@@ -179,6 +194,10 @@ Returns **void**&#x20;
 -   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
+
+#### getSampleSizeArea
+
+Returns **any**&#x20;
 
 #### setSampleSizeArea
 
@@ -189,6 +208,10 @@ Returns **void**&#x20;
 
 Returns **void**&#x20;
 
+#### getCalculateZMethod
+
+Returns **any**&#x20;
+
 #### setCalculateZMethod
 
 ##### Parameters
@@ -197,6 +220,10 @@ Returns **void**&#x20;
 -   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
+
+#### getSmooth
+
+Returns **any**&#x20;
 
 #### setSmooth
 
@@ -207,6 +234,10 @@ Returns **void**&#x20;
 
 Returns **void**&#x20;
 
+#### getNoDataValue
+
+Returns **any**&#x20;
+
 #### setNoDataValue
 
 ##### Parameters
@@ -215,6 +246,10 @@ Returns **void**&#x20;
 -   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
+
+#### getTilesResolution
+
+Returns **any**&#x20;
 
 #### setTilesResolution
 
@@ -225,11 +260,28 @@ Returns **void**&#x20;
 
 Returns **void**&#x20;
 
+#### getBands
+
+Returns **any**&#x20;
+
 #### setBands
 
 ##### Parameters
 
 -   `bands` **any**&#x20;
+-   `silent` (optional, default `false`)
+
+Returns **void**&#x20;
+
+#### getTimeout
+
+Returns **any**&#x20;
+
+#### setTimeout
+
+##### Parameters
+
+-   `timeout` **any**&#x20;
 -   `silent` (optional, default `false`)
 
 Returns **void**&#x20;
@@ -259,7 +311,7 @@ Type: [Array](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global
 
 **_\[type]_**
 
-Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:bands"` | `"change:tilesResolution"`)
+Type: (`"change:samples"` | `"change:sampleSizeArea"` | `"change:source"` | `"change:calculateZMethod"` | `"change:noDataValue"` | `"change:smooth"` | `"change:bands"` | `"change:tilesResolution"` | `"change:timeout"`)
 
 ### IGetElevationValues
 
@@ -417,6 +469,14 @@ These values are considerated as transparency, so probably you want these replac
 `false` to disable
 
 Type: ([number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number) | `false`)
+
+#### timeout
+
+Timeout in ms to wait before close the requests
+
+`5000` ms is the default
+
+Type: [number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)
 
 #### verbose
 
