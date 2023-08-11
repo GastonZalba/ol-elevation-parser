@@ -71,3 +71,6 @@
 * Added helper methods `getMaxTilesResolution` and `getCurrentViewResolution`
 * Added event `load`
 * Improved `readFromImage` class to avoid some retiterated function calls on loops
+
+## v1.3.10
+* Improved README

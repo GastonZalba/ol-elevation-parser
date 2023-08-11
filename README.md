@@ -12,13 +12,30 @@
     </a>
 </p>
 
-Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources (TileWMS, TileImage, XYZ, GeoTIFF), using raster grayscale (float) or rgb ([Terrarium](https://www.mapzen.com/blog/terrain-tile-service/), [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data) or custom processings) elevation models as source.
+Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources, using raster grayscale or color processed rgbs as source.
 
 Tested with OpenLayers version 6 and 7.
 
 ## How it works
 
-ol-elevation-parser supports calculations from Points, LineStrings and Polygons. Each of these geometries is processed diferently:
+### Supported sources:
+
+-   [XYZ](https://openlayers.org/en/latest/apidoc/module-ol_source_XYZ-XYZ.html)
+-   [TileWMS](https://openlayers.org/en/latest/apidoc/module-ol_source_TileWMS-TileWMS.html)
+-   [TileImage](https://openlayers.org/en/latest/apidoc/module-ol_source_TileImage-TileImage.html)
+-   [GeoTIFF](https://openlayers.org/en/latest/apidoc/module-ol_source_GeoTIFF-GeoTIFFSource.html)
+-   Custom function to retrieve data from an API or so
+
+### Supported color formats:
+
+-   [Terrarium](https://www.mapzen.com/blog/terrain-tile-service/)
+-   [Mapbox](https://docs.mapbox.com/data/tilesets/guides/access-elevation-data)
+-   Geoserver raster grayscale MDE (16, 24, 32 bits, etc) using `getFeatureInfo` function (very slow to calculate LineStrings and Polygons, but useful in some specific cases).
+-   Custom color processing (you must provide the function to decode the pixel RGB values)
+
+### Supported geometries:
+
+Supports calculations from Points, LineStrings and Polygons. Each of these geometries is processed diferently:
 
 -   `Points`: in this case, there is no further processing, the coordinates of each point are consulted according to the configured method (see [calculateZMethod](#calculateZMethod)) and the same supplied coordinates are returned with the z value embedded.
 -   `LineStrings`: here it's necessary to resample the geometry to assemble the profile, and make requests only of those sampled points. The greater the number of samples (see [samples](#samples)), the longer it will take, but the better the quality of the profile will be. In the the sampling, the length of that line is divided into x number of parts to obtain the coordinates of each of the extremes. Then, the vertices of the geometry are also added to those sampled coordinates.
@@ -31,9 +48,9 @@ ol-elevation-parser supports calculations from Points, LineStrings and Polygons.
 ```js
 import ElevationParser from 'ol-elevation-parser';
 
-import TileWMS from 'ol/source/TileWMS';
-import LineString from 'ol/geom/LineString';
-import Feature from 'ol/Feature';
+import TileWMS from 'ol/source/TileWMS.js';
+import LineString from 'ol/geom/LineString.js';
+import Feature from 'ol/Feature.js';
 
 var elevationLayer = new TileWMS({
     url: 'http://localhost:8080/geoserver/dipsohdev/ows',
@@ -390,7 +407,7 @@ Type: function (originalFeature: Feature<(LineString | Point | Polygon)>, sample
 
 ### ElevationValuesIndividualOptions
 
-**_\[type]_**
+**_\[interface]_**
 
 ### Options
 
