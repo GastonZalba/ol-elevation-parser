@@ -319,6 +319,29 @@ export default class ElevationParser extends Control {
     }
 
     /**
+     * Maximum tile resolution of the image source
+     * Only if the source is a raster
+     *
+     * @public
+     * @returns
+     */
+    getMaxTilesResolution(): number {
+        if (this._readFromImage) return this._readFromImage.getMaxResolution();
+        return null;
+    }
+
+    /**
+     * Current view resolution
+     * Unsupported if the view of a GeoTIFF is used in the map
+     *
+     * @public
+     * @returns
+     */
+    getCurrentViewResolution(): number {
+        return this.getMap().getView().getResolution();
+    }
+
+    /**
      * @public
      * @param map
      * @TODO remove events if map is null
@@ -722,10 +745,12 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      * If `max`, the tiles will be downloaded using the maximum quality possible, but you
      * have to configure the `maxZoom` attribute of the source to prevent requesting inexisting tiles.
      * Using `max` provides the maximum quality, but the requests are gonna be in higher number and would be slower.
+     * Use the method `getMaxTilesResolution` to get the max resolution in a number number.
      *
      * ´current´ uses the current view resolution of the map. If the source is visible in the map,
      * the already downloaded tiles would be used to the calculations so is it's the faster method.
-     * Doesn't work if source is GeoTIFF and the map is used the view
+     * Use the method `getCurrentViewResolution` to get the curent view resolution number.
+     * Doesn't work if the source is GeoTIFF and the map use its `view`
      *
      * ´current´ is the default
      */

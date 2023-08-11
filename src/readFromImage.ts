@@ -65,14 +65,13 @@ export default class ReadFromImage {
 
         if (_resolution === 'current') {
             finalResolution = this._view.getResolution();
-            // fallback if the view of a GeoTIFF is used in the map
+            // if the view of a GeoTIFF is used in the map
             if (!finalResolution) {
                 console.warn('Cannot calculate current view resolution');
             }
         } else if (_resolution === 'max') {
-            const resolutions = this._getTileGrid().getResolutions();
-            if (resolutions)
-                finalResolution = resolutions[resolutions.length - 1];
+            const maxRes = this.getMaxResolution();
+            if (maxRes) finalResolution = maxRes;
             else console.warn("Cannot calculate source's max resolution");
         } else {
             // resolution is a explicit number provided in the config
@@ -180,6 +179,16 @@ export default class ReadFromImage {
         ];
 
         return this._extractValuesFromPixelDEM(pixel);
+    }
+
+    /**
+     * Get the Max Resolution of the source
+     * @returns
+     */
+    getMaxResolution(): number {
+        const resolutions = this._getTileGrid().getResolutions();
+        if (resolutions) return resolutions[resolutions.length - 1];
+        return null;
     }
 
     /**

@@ -68,3 +68,4 @@
 
 ## v1.3.9
 * Added param `customOptions` to the `getElevationValues` method, allowing to change the quality/resolution at each reading
+* Added helper methods `getMaxTilesResolution` and `getCurrentViewResolution`
