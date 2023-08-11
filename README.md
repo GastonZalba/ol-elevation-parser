@@ -127,6 +127,8 @@ TypeScript types are shipped with the project in the dist directory and should b
     -   [getTimeout](#gettimeout)
     -   [setTimeout](#settimeout)
         -   [Parameters](#parameters-10)
+    -   [getMaxTilesResolution](#getmaxtilesresolution)
+    -   [getCurrentViewResolution](#getcurrentviewresolution)
     -   [setMap](#setmap)
         -   [Parameters](#parameters-11)
 -   [mainCoords](#maincoords)
@@ -291,6 +293,20 @@ Returns **any**&#x20;
 
 Returns **void**&#x20;
 
+#### getMaxTilesResolution
+
+Maximum tile resolution of the image source
+Only if the source is a raster
+
+Returns **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)**&#x20;
+
+#### getCurrentViewResolution
+
+Current view resolution
+Unsupported if the view of a GeoTIFF is used in the map
+
+Returns **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)**&#x20;
+
 #### setMap
 
 ##### Parameters
@@ -422,10 +438,12 @@ This sets the resolution in wich the tiles are downloaded to calculate the z val
 If `max`, the tiles will be downloaded using the maximum quality possible, but you
 have to configure the `maxZoom` attribute of the source to prevent requesting inexisting tiles.
 Using `max` provides the maximum quality, but the requests are gonna be in higher number and would be slower.
+Use the method `getMaxTilesResolution` to get the max resolution in a number number.
 
 ´current´ uses the current view resolution of the map. If the source is visible in the map,
 the already downloaded tiles would be used to the calculations so is it's the faster method.
-Doesn't work if source is GeoTIFF and the map is used the view
+Use the method `getCurrentViewResolution` to get the curent view resolution number.
+Doesn't work if the source is GeoTIFF and the map use its `view`
 
 ´current´ is the default
 

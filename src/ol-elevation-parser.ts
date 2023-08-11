@@ -45,7 +45,11 @@ export default class ElevationParser extends Control {
 
     protected _initialized = false;
 
-    declare on: OnSignature<EventTypes, BaseEvent, EventsKey> &
+    declare on: OnSignature<
+        EventTypes | `${GeneralEventTypes}`,
+        BaseEvent,
+        EventsKey
+    > &
         OnSignature<
             ObjectEventTypes | ElevationParserEventTypes,
             ObjectEvent,
@@ -56,7 +60,11 @@ export default class ElevationParser extends Control {
             EventsKey
         >;
 
-    declare once: OnSignature<EventTypes, BaseEvent, EventsKey> &
+    declare once: OnSignature<
+        EventTypes | `${GeneralEventTypes}`,
+        BaseEvent,
+        EventsKey
+    > &
         OnSignature<
             ObjectEventTypes | ElevationParserEventTypes,
             ObjectEvent,
@@ -74,7 +82,10 @@ export default class ElevationParser extends Control {
             void
         > &
         CombinedOnSignature<
-            ElevationParserEventTypes | ObjectEventTypes | EventTypes,
+            | ElevationParserEventTypes
+            | ObjectEventTypes
+            | EventTypes
+            | `${GeneralEventTypes}`,
             void
         >;
 
@@ -358,7 +369,7 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param coords
-     * @param optOptions
+     * @param optOptions To overwrite the general ones
      * @returns
      * @private
      */
@@ -366,6 +377,8 @@ export default class ElevationParser extends Control {
         coords: Coordinate[],
         optOptions: ElevationValuesIndividualOptions = null
     ): Promise<CoordinatesXYZ[]> => {
+        const RESOLUTION_NUMBER_FALLBACK = 0.01;
+
         this._countConnections++;
         const countConnections = this._countConnections;
         let errorCount = 0;
@@ -378,6 +391,33 @@ export default class ElevationParser extends Control {
         // If only one coord is needed, the error is strict and raised inmediatly
         // This is useful if multipels coords are needed, and maybe one or two return error
         const countErrorsLimit = coords.length >= 5 ? 1 : 5;
+
+        let resolutionNumber: number;
+
+        const _resolution =
+            optOptions.tilesResolution || this.getTilesResolution();
+
+        if (_resolution === 'current') {
+            resolutionNumber = this.getMap().getView().getResolution();
+            // if the view of a GeoTIFF is used in the map
+            if (!resolutionNumber) {
+                console.warn('Cannot calculate current view resolution');
+            }
+        } else if (_resolution === 'max') {
+            const maxRes = this.getMaxTilesResolution();
+            if (maxRes) resolutionNumber = maxRes;
+            else console.warn("Cannot calculate source's max resolution");
+        } else {
+            // resolution is a explicit number provided in the config
+            resolutionNumber = _resolution;
+        }
+
+        if (!resolutionNumber) {
+            resolutionNumber =
+                this.getMap().getView().getMinResolution() ||
+                RESOLUTION_NUMBER_FALLBACK;
+            console.warn('Using fallback resolution:', resolutionNumber);
+        }
 
         for (const coord of coords) {
             try {
@@ -401,7 +441,7 @@ export default class ElevationParser extends Control {
                 } else {
                     zValue = await this._getZValuesFromImage(
                         coord,
-                        optOptions.tilesResolution
+                        resolutionNumber
                     );
                 }
 
@@ -433,10 +473,6 @@ export default class ElevationParser extends Control {
      * @private
      */
     private _init(): void {
-        this._initialized = true;
-
-        this._addPropertyEvents();
-
         this.setSamples(this._options.samples, /* silent = */ true);
 
         this.setSampleSizeArea(
@@ -463,7 +499,15 @@ export default class ElevationParser extends Control {
         this.setTimeout(this._options.timeout, /* silent = */ true);
 
         // Need to be the latest, fires the change event
-        this.setSource(this._options.source, /* silent = */ false);
+        this.setSource(this._options.source, /* silent = */ true);
+
+        this._addPropertyEvents();
+
+        this._onInitModifySource();
+
+        this._initialized = true;
+
+        this.dispatchEvent(GeneralEventTypes.LOAD);
     }
 
     /**
@@ -471,30 +515,32 @@ export default class ElevationParser extends Control {
      */
     private _addPropertyEvents(): void {
         this.on(
-            [
-                'change:source',
-                'change:bands',
-                'change:calculateZMethod',
-                'change:tilesResolution'
-            ],
+            ['change:source', 'change:bands', 'change:calculateZMethod'],
             () => {
-                const source = this.getSource();
-                if (
-                    !(source instanceof Function) &&
-                    this.get('calculateZMethod') !== 'getFeatureInfo'
-                ) {
-                    this._readFromImage = new ReadFromImage(
-                        source,
-                        this.get('calculateZMethod'),
-                        this.get('tilesResolution'),
-                        this.get('bands'),
-                        this.getMap()
-                    );
-                } else {
-                    this._readFromImage = null;
-                }
+                this._onInitModifySource();
             }
         );
+    }
+
+    /**
+     * Run on init or every time the source is modified
+     * @private
+     */
+    private _onInitModifySource(): void {
+        const source = this.getSource();
+        if (
+            !(source instanceof Function) &&
+            this.get('calculateZMethod') !== 'getFeatureInfo'
+        ) {
+            this._readFromImage = new ReadFromImage(
+                source,
+                this.get('calculateZMethod'),
+                this.get('bands'),
+                this.getMap()
+            );
+        } else {
+            this._readFromImage = null;
+        }
     }
 
     /**
@@ -561,7 +607,7 @@ export default class ElevationParser extends Control {
      */
     private async _getZValuesFromImage(
         coordinate: Coordinate,
-        tilesResolution: Options['tilesResolution'] = null
+        tilesResolution: number
     ): Promise<number> {
         return await this._readFromImage.read(coordinate, tilesResolution);
     }
@@ -598,6 +644,10 @@ export default class ElevationParser extends Control {
 
         return data.features[0].properties.GRAY_INDEX;
     }
+}
+
+export enum GeneralEventTypes {
+    LOAD = 'load'
 }
 
 /**

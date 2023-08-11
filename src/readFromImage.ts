@@ -26,7 +26,6 @@ export default class ReadFromImage {
     protected _source: RasterSources;
     protected _view: View;
     protected _calculateZMethod: Options['calculateZMethod'];
-    protected _resolution: Options['tilesResolution'];
     protected _bands: Options['bands'];
     protected _canvas: HTMLCanvasElement;
     protected _ctx: CanvasRenderingContext2D;
@@ -34,15 +33,12 @@ export default class ReadFromImage {
     constructor(
         source: RasterSources,
         calculateZMethod: Options['calculateZMethod'],
-        resolution: Options['tilesResolution'],
         bands: Options['bands'],
         map: Map
     ) {
         this._projection =
             source.getProjection() || map.getView().getProjection();
         this._view = map.getView();
-
-        this._resolution = resolution;
 
         this._source = source;
         this._bands = bands;
@@ -53,41 +49,15 @@ export default class ReadFromImage {
         this._ctx = this._canvas.getContext('2d');
     }
 
-    async read(
-        coordinate: Coordinate,
-        resolution: Options['tilesResolution'] = null
-    ) {
+    async read(coordinate: Coordinate, resolution: number) {
         // clear canvas
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-
-        let finalResolution: number;
-        const _resolution = resolution || this._resolution;
-
-        if (_resolution === 'current') {
-            finalResolution = this._view.getResolution();
-            // if the view of a GeoTIFF is used in the map
-            if (!finalResolution) {
-                console.warn('Cannot calculate current view resolution');
-            }
-        } else if (_resolution === 'max') {
-            const maxRes = this.getMaxResolution();
-            if (maxRes) finalResolution = maxRes;
-            else console.warn("Cannot calculate source's max resolution");
-        } else {
-            // resolution is a explicit number provided in the config
-            finalResolution = _resolution;
-        }
-
-        if (!finalResolution) {
-            finalResolution = this._view.getMinResolution() || 0.01;
-            console.warn('Using fallback resolution:', finalResolution);
-        }
 
         const tileGrid = this._getTileGrid();
 
         const tileCoord = tileGrid.getTileCoordForCoordAndResolution(
             coordinate,
-            finalResolution
+            resolution
         );
         const zoom = tileCoord[0];
         const tileSize = tileGrid.getTileSize(zoom);
@@ -97,7 +67,7 @@ export default class ReadFromImage {
             tileCoord[1],
             tileCoord[2],
             1,
-            this._view.getProjection()
+            this._projection
         );
 
         if (tile.getState() !== 2) {
