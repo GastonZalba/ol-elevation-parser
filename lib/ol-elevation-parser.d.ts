@@ -31,17 +31,20 @@ export default class ElevationParser extends Control {
     protected _countConnections: number;
     protected _readFromImage: ReadFromImage;
     protected _initialized: boolean;
-    on: OnSignature<EventTypes, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
-    once: OnSignature<EventTypes, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
-    un: OnSignature<EventTypes, BaseEvent, void> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, void> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, void>;
+    on: OnSignature<EventTypes | `${GeneralEventTypes}`, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
+    once: OnSignature<EventTypes | `${GeneralEventTypes}`, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
+    un: OnSignature<EventTypes, BaseEvent, void> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, void> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes | `${GeneralEventTypes}`, void>;
     constructor(options: Options);
     /**
+     * Get Feature's elevation values.
+     * Use custom options to overwrite the general ones for specific cases
      *
      * @param feature
+     * @param customOptions
      * @returns
      * @public
      */
-    getElevationValues(feature: Feature<LineString | Point | Polygon>): Promise<IGetElevationValues | Error>;
+    getElevationValues(feature: Feature<LineString | Point | Polygon>, customOptions?: ElevationValuesIndividualOptions): Promise<IGetElevationValues | Error>;
     /**
      * @public
      * @returns
@@ -133,6 +136,22 @@ export default class ElevationParser extends Control {
      */
     setTimeout(timeout: Options['timeout'], silent?: boolean): void;
     /**
+     * Maximum tile resolution of the image source
+     * Only if the source is a raster
+     *
+     * @public
+     * @returns
+     */
+    getMaxTilesResolution(): number;
+    /**
+     * Current view resolution
+     * Unsupported if the view of a GeoTIFF is used in the map
+     *
+     * @public
+     * @returns
+     */
+    getCurrentViewResolution(): number;
+    /**
      * @public
      * @param map
      * @TODO remove events if map is null
@@ -141,6 +160,7 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param coords
+     * @param optOptions To overwrite the general ones
      * @returns
      * @private
      */
@@ -155,9 +175,15 @@ export default class ElevationParser extends Control {
      */
     private _addPropertyEvents;
     /**
+     * Run on init or every time the source is modified
+     * @private
+     */
+    private _onInitModifySource;
+    /**
      * Get some sample coords from the geometry while preserving the vertices.
      *
      * @param feature
+     * @param params
      * @returns
      * @private
      */
@@ -165,6 +191,7 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param coordinate
+     * @param tilesResolution
      * @returns
      * @private
      */
@@ -178,6 +205,9 @@ export default class ElevationParser extends Control {
      * @private
      */
     private _getZValuesFromWMS;
+}
+export declare enum GeneralEventTypes {
+    LOAD = "load"
 }
 /**
  * **_[interface]_**
@@ -249,6 +279,16 @@ export type RasterSources = TileWMS | TileImage | XYZ | GeoTIFF;
  */
 export type CustomSourceFn = (originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: ISampledGeom['sampledCoords']) => Promise<IElevationCoords>;
 /**
+ * **_[type]_**
+ * @public
+ */
+export interface ElevationValuesIndividualOptions {
+    samples?: Options['samples'];
+    sampleSizeArea?: Options['sampleSizeArea'];
+    tilesResolution?: Options['tilesResolution'];
+    smooth?: Options['smooth'];
+}
+/**
  * **_[interface]_**
  * @public
  */
@@ -287,10 +327,12 @@ export interface Options extends Omit<ControlOptions, 'target'> {
      * If `max`, the tiles will be downloaded using the maximum quality possible, but you
      * have to configure the `maxZoom` attribute of the source to prevent requesting inexisting tiles.
      * Using `max` provides the maximum quality, but the requests are gonna be in higher number and would be slower.
+     * Use the method `getMaxTilesResolution` to get the max resolution in a number number.
      *
      * ´current´ uses the current view resolution of the map. If the source is visible in the map,
      * the already downloaded tiles would be used to the calculations so is it's the faster method.
-     * Doesn't work if source is GeoTIFF and the map is used the view
+     * Use the method `getCurrentViewResolution` to get the curent view resolution number.
+     * Doesn't work if the source is GeoTIFF and the map use its `view`
      *
      * ´current´ is the default
      */
