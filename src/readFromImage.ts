@@ -53,36 +53,42 @@ export default class ReadFromImage {
         this._ctx = this._canvas.getContext('2d');
     }
 
-    async read(coordinate: Coordinate) {
+    async read(
+        coordinate: Coordinate,
+        resolution: Options['tilesResolution'] = null
+    ) {
         // clear canvas
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-        let resolution: number;
 
-        if (this._resolution === 'current') {
-            resolution = this._view.getResolution();
+        let finalResolution: number;
+        const _resolution = resolution || this._resolution;
+
+        if (_resolution === 'current') {
+            finalResolution = this._view.getResolution();
             // fallback if the view of a GeoTIFF is used in the map
-            if (!resolution) {
+            if (!finalResolution) {
                 console.warn('Cannot calculate current view resolution');
             }
-        } else if (this._resolution === 'max') {
+        } else if (_resolution === 'max') {
             const resolutions = this._getTileGrid().getResolutions();
-            if (resolutions) resolution = resolutions[resolutions.length - 1];
+            if (resolutions)
+                finalResolution = resolutions[resolutions.length - 1];
             else console.warn("Cannot calculate source's max resolution");
         } else {
             // resolution is a explicit number provided in the config
-            resolution = this._resolution;
+            finalResolution = _resolution;
         }
 
-        if (!resolution) {
-            resolution = this._view.getMinResolution() || 0.01;
-            console.warn('Using fallback resolution:', resolution);
+        if (!finalResolution) {
+            finalResolution = this._view.getMinResolution() || 0.01;
+            console.warn('Using fallback resolution:', finalResolution);
         }
 
         const tileGrid = this._getTileGrid();
 
         const tileCoord = tileGrid.getTileCoordForCoordAndResolution(
             coordinate,
-            resolution
+            finalResolution
         );
         const zoom = tileCoord[0];
         const tileSize = tileGrid.getTileSize(zoom);

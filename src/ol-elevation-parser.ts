@@ -97,17 +97,28 @@ export default class ElevationParser extends Control {
     }
 
     /**
+     * Get Feature's elevation values.
+     * Use custom options to overwrite the general ones for specific cases
      *
      * @param feature
+     * @param customOptions
      * @returns
      * @public
      */
     async getElevationValues(
-        feature: Feature<LineString | Point | Polygon>
+        feature: Feature<LineString | Point | Polygon>,
+        customOptions: ElevationValuesIndividualOptions = null
     ): Promise<IGetElevationValues | Error> {
         try {
-            const { sampledCoords, gridPolygons } =
-                this._sampleFeatureCoords(feature);
+            const { sampledCoords, gridPolygons } = this._sampleFeatureCoords(
+                feature,
+                {
+                    samples: customOptions?.samples || this.getSamples(),
+                    sampleSizeArea:
+                        customOptions?.sampleSizeArea ||
+                        this.getSampleSizeArea()
+                }
+            );
 
             let contourCoords: CoordinatesXYZ[], mainCoords: CoordinatesXYZ[];
 
@@ -121,19 +132,22 @@ export default class ElevationParser extends Control {
                 ));
             } else {
                 mainCoords = await this._getZFromSampledCoords(
-                    sampledCoords.mainCoords
+                    sampledCoords.mainCoords,
+                    customOptions
                 );
 
                 // Only Polygons
                 if (sampledCoords.contourCoords) {
                     contourCoords = await this._getZFromSampledCoords(
-                        sampledCoords.contourCoords
+                        sampledCoords.contourCoords,
+                        customOptions
                     );
                 }
             }
+            const smooth = customOptions?.smooth || this.get('smooth');
 
-            if (this.get('smooth')) {
-                mainCoords = getSmoothedCoords(mainCoords, this.get('smooth'));
+            if (smooth) {
+                mainCoords = getSmoothedCoords(mainCoords, smooth);
             }
 
             return {
@@ -321,11 +335,13 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param coords
+     * @param optOptions
      * @returns
      * @private
      */
     private _getZFromSampledCoords = async (
-        coords: Coordinate[]
+        coords: Coordinate[],
+        optOptions: ElevationValuesIndividualOptions = null
     ): Promise<CoordinatesXYZ[]> => {
         this._countConnections++;
         const countConnections = this._countConnections;
@@ -360,7 +376,10 @@ export default class ElevationParser extends Control {
                         this.getMap().getView()
                     );
                 } else {
-                    zValue = await this._getZValuesFromImage(coord);
+                    zValue = await this._getZValuesFromImage(
+                        coord,
+                        optOptions.tilesResolution
+                    );
                 }
 
                 if (this.get('noDataValue') !== false) {
@@ -459,11 +478,16 @@ export default class ElevationParser extends Control {
      * Get some sample coords from the geometry while preserving the vertices.
      *
      * @param feature
+     * @param params
      * @returns
      * @private
      */
     private _sampleFeatureCoords(
-        feature: Feature<LineString | Point | Polygon>
+        feature: Feature<LineString | Point | Polygon>,
+        params: {
+            samples: Options['samples'];
+            sampleSizeArea: Options['sampleSizeArea'];
+        }
     ): ISampledGeom {
         const geom = feature.getGeometry();
 
@@ -478,12 +502,12 @@ export default class ElevationParser extends Control {
 
             const sub_coords = polygonFeature.getGeometry().getCoordinates()[0];
             const contourGeom = new LineString(sub_coords);
-            contourCoords = getLineSamples(contourGeom, this.get('samples'));
+            contourCoords = getLineSamples(contourGeom, params.samples);
 
             gridPolygons = getPolygonSamples(
                 polygonFeature,
                 this.getMap().getView().getProjection().getCode(),
-                this.get('sampleSizeArea')
+                params.sampleSizeArea
             );
             mainCoords = gridPolygons.map((g) => {
                 const coords = g
@@ -493,7 +517,7 @@ export default class ElevationParser extends Control {
                 return [coords[0], coords[1]];
             });
         } else if (geom instanceof LineString) {
-            mainCoords = getLineSamples(geom, this.get('samples'));
+            mainCoords = getLineSamples(geom, params.samples);
         }
 
         return {
@@ -508,13 +532,15 @@ export default class ElevationParser extends Control {
     /**
      *
      * @param coordinate
+     * @param tilesResolution
      * @returns
      * @private
      */
     private async _getZValuesFromImage(
-        coordinate: Coordinate
+        coordinate: Coordinate,
+        tilesResolution: Options['tilesResolution'] = null
     ): Promise<number> {
-        return await this._readFromImage.read(coordinate);
+        return await this._readFromImage.read(coordinate, tilesResolution);
     }
 
     /**
@@ -639,6 +665,17 @@ export type CustomSourceFn = (
     originalFeature: Feature<LineString | Point | Polygon>,
     sampledCoords: ISampledGeom['sampledCoords']
 ) => Promise<IElevationCoords>;
+
+/**
+ * **_[type]_**
+ * @public
+ */
+export interface ElevationValuesIndividualOptions {
+    samples?: Options['samples'];
+    sampleSizeArea?: Options['sampleSizeArea'];
+    tilesResolution?: Options['tilesResolution'];
+    smooth?: Options['smooth'];
+}
 
 /**
  * **_[interface]_**

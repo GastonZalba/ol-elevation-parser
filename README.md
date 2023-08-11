@@ -141,6 +141,7 @@ TypeScript types are shipped with the project in the dist directory and should b
     -   [contourCoords](#contourcoords-1)
 -   [RasterSources](#rastersources)
 -   [CustomSourceFn](#customsourcefn)
+-   [ElevationValuesIndividualOptions](#elevationvaluesindividualoptions)
 -   [Options](#options)
     -   [source](#source)
     -   [calculateZMethod](#calculatezmethod)
@@ -163,9 +164,13 @@ TypeScript types are shipped with the project in the dist directory and should b
 
 #### getElevationValues
 
+Get Feature's elevation values.
+Use custom options to overwrite the general ones for specific cases
+
 ##### Parameters
 
 -   `feature` **Feature<(LineString | Point | Polygon)>**&#x20;
+-   `customOptions` **[ElevationValuesIndividualOptions](#elevationvaluesindividualoptions)** (optional, default `null`)
 
 Returns **[Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<([IGetElevationValues](#igetelevationvalues) | [Error](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error))>**&#x20;
 
@@ -366,6 +371,10 @@ Type: (TileWMS | TileImage | XYZ | GeoTIFF)
 **_\[type]_**
 
 Type: function (originalFeature: Feature<(LineString | Point | Polygon)>, sampledCoords: any): [Promise](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)<[IElevationCoords](#ielevationcoords)>
+
+### ElevationValuesIndividualOptions
+
+**_\[type]_**
 
 ### Options
 

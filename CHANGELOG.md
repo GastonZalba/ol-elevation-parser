@@ -65,3 +65,6 @@
 * Added public methods: `getBands`, `getTilesResolution`, `getNoDataValue`, `getSmooth`, `getSampleSizeArea`, `getSamples`
 * Replaced dependency `Axios` with native `fetch`
 * Added option `timeout`
+
+## v1.3.9
+* Added param `customOptions` to the `getElevationValues` method, allowing to change the quality/resolution at each reading
