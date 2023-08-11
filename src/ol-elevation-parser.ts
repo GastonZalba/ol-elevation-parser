@@ -740,7 +740,7 @@ export type CustomSourceFn = (
 ) => Promise<IElevationCoords>;
 
 /**
- * **_[type]_**
+ * **_[interface]_**
  * @public
  */
 export interface ElevationValuesIndividualOptions {

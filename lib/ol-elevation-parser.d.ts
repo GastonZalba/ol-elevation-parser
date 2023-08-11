@@ -279,7 +279,7 @@ export type RasterSources = TileWMS | TileImage | XYZ | GeoTIFF;
  */
 export type CustomSourceFn = (originalFeature: Feature<LineString | Point | Polygon>, sampledCoords: ISampledGeom['sampledCoords']) => Promise<IElevationCoords>;
 /**
- * **_[type]_**
+ * **_[interface]_**
  * @public
  */
 export interface ElevationValuesIndividualOptions {
