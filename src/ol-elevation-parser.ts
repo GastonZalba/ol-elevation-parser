@@ -148,13 +148,18 @@ export default class ElevationParser extends Control {
                 );
 
                 // Only Polygons
-                if (sampledCoords.contourCoords) {
+                if (mainCoords && sampledCoords.contourCoords) {
                     contourCoords = await this._getZFromSampledCoords(
                         sampledCoords.contourCoords,
                         customOptions
                     );
                 }
             }
+
+            if (mainCoords === null) {
+                return null;
+            }
+
             const smooth = customOptions?.smooth || this.get('smooth');
 
             if (smooth) {
@@ -424,7 +429,7 @@ export default class ElevationParser extends Control {
                 // If there is a new connection (onChange event), abort this
                 if (this._countConnections !== countConnections) {
                     logger('New geometry detected, previous requests aborted');
-                    return;
+                    return null;
                 }
 
                 let zValue: number;

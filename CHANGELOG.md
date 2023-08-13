@@ -74,3 +74,6 @@
 
 ## v1.3.10
 * Improved README
+
+## v1.3.11
+* If request is cancelled/overwrited, return `null` as response
