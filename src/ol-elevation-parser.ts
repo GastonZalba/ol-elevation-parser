@@ -400,7 +400,7 @@ export default class ElevationParser extends Control {
         let resolutionNumber: number;
 
         const _resolution =
-            optOptions.tilesResolution || this.getTilesResolution();
+            optOptions?.tilesResolution || this.getTilesResolution();
 
         if (_resolution === 'current') {
             resolutionNumber = this.getMap().getView().getResolution();

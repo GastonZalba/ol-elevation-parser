@@ -77,3 +77,6 @@
 
 ## v1.3.11
 * If request is cancelled/overwrited, return `null` as response
+
+## v1.3.12
+* Added missing question mark to check if variable is `null`
