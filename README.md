@@ -95,7 +95,7 @@ See CHANGELOG for details of changes in each release.
 
 #### JS
 
-Load `ol-elevation-parser.js` after [OpenLayers](https://www.npmjs.com/package/ol). MappingTools is available as `ElevationParser`.
+Load `ol-elevation-parser.js` after [OpenLayers](https://www.npmjs.com/package/ol). Elevation Parser is available as `ElevationParser`.
 
 ```HTML
 <script src="https://unpkg.com/ol-elevation-parser@1.3.14"></script>
