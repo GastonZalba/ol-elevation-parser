@@ -1,0 +1,63 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-size: 15px;
+    background-color: #000;
+}
+
+.map {
+    height: 100%;
+    margin-left: 270px;
+}
+
+#sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 270px;
+    padding: 10px;
+    box-sizing: border-box;
+    background-color: #fff;
+    box-shadow: 0 5px 5px black;
+    border-right: 1px solid grey;
+    overflow-y: auto;
+}
+
+button {
+    cursor: pointer;
+}
+
+#values {
+    margin: 0 0 10px 0;
+    font-family: monospace;
+    background: #282828;
+    color: #fff;
+    padding: 5px;
+    font-size: 13px;
+    border-radius: 5px;
+    line-height: 1.1;
+}
+
+#testButtons label {
+    cursor: pointer;
+    margin-top: 5px;
+    display: block;
+}
+
+h1 {
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+b {
+    font-weight: 600;
+}
+
+p {
+    font-size: 13px;
+    line-height: 1.5;
+}

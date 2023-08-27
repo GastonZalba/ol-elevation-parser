@@ -80,3 +80,7 @@
 
 ## v1.3.12
 * Added missing question mark to check if variable is `null`
+
+## v1.3.14
+* Wrong z values now returns `undefined` instead of `0`
+* Added example

@@ -4,7 +4,10 @@ import del from 'rollup-plugin-delete';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
 import banner2 from 'rollup-plugin-banner2'
+import terser from '@rollup/plugin-terser';
 import { readFileSync } from 'fs';
+import commonjs from '@rollup/plugin-commonjs';
+
 const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
 
 const banner =
@@ -31,11 +34,20 @@ const globals = (id) => {
 
 export default function (commandOptions) {
     return {
-        input: 'src/ol-elevation-parser.ts',
+        input: 'src/index-umd.ts',
         output: [
             {
-                dir: 'dist',
+                file: 'dist/ol-elevation-parser.js',
                 format: 'umd',
+                name: 'ElevationParser',
+                globals: globals,
+                sourcemap: true
+            },
+            !commandOptions.dev && {
+                file: 'dist/ol-elevation-parser.min.js',
+                format: 'umd',
+                plugins: [terser()],
+                inlineDynamicImports: true,
                 name: 'ElevationParser',
                 globals: globals,
                 sourcemap: true
@@ -43,6 +55,7 @@ export default function (commandOptions) {
         ],
         plugins: [
             banner2(() => banner),
+            commonjs(),
             del({ targets: 'dist/*' }),
             typescript(
                 {
@@ -56,7 +69,7 @@ export default function (commandOptions) {
                 open: false,
                 verbose: true,
                 contentBase: ['', 'examples'],
-                historyApiFallback: '/basic.html',
+                historyApiFallback: '/geotiff.html',
                 host: 'localhost',
                 port: 3005,
                 // execute function after server has begun listening
@@ -73,7 +86,7 @@ export default function (commandOptions) {
             })
         ],
         external: id => {
-            return /(^ol(\\|\/)|axios)/.test(id)
+            return /(^ol(\\|\/)|axios|@turf)/.test(id)
         }
     }
 }

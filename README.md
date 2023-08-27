@@ -43,6 +43,9 @@ Supports calculations from Points, LineStrings and Polygons. Each of these geome
     -   on the one hand, the contour of the polygon, to which the same procedure as the LineStrings is applied. This contour is useful to obtain the base level that borders the area, which allows the volume of the polygon to be calculated later.
     -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea)), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
 
+## Examples
+-   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/master/examples/geotiff).
+
 ## Usage
 
 ```js
@@ -88,7 +91,15 @@ const data = await elevationParser.getElevationValues(feature);
 See CHANGELOG for details of changes in each release.
 
 ## Install
+### Browser
 
+#### JS
+
+Load `ol-elevation-parser.js` after [OpenLayers](https://www.npmjs.com/package/ol). MappingTools is available as `ElevationParser`.
+
+```HTML
+<script src="https://unpkg.com/ol-elevation-parser@1.3.14"></script>
+```
 ### Parcel, Webpack, etc.
 
 NPM package: [ol-elevation-parser](https://www.npmjs.com/package/ol-elevation-parser).

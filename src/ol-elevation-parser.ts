@@ -458,7 +458,7 @@ export default class ElevationParser extends Control {
                 const zValueRound =
                     typeof zValue !== 'undefined'
                         ? Number(zValue.toFixed(3))
-                        : 0;
+                        : undefined;
 
                 coordsWithZ.push([...coord, zValueRound]);
             } catch (err) {
