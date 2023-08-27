@@ -1,7 +1,7 @@
 /*!
- * ol-elevation-parser - v1.3.14
+ * ol-elevation-parser - v1.3.15
  * https://github.com/GastonZalba/ol-elevation-parser#readme
- * Built: Sat Aug 26 2023 21:03:23 GMT-0300 (Argentina Standard Time)
+ * Built: Sat Aug 26 2023 21:16:50 GMT-0300 (Argentina Standard Time)
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('ol/geom/LineString.js'), require('ol/geom/Point.js'), require('ol/geom/Polygon.js'), require('ol/control/Control.js'), require('ol/source/TileWMS.js'), require('@turf/bbox'), require('@turf/area'), require('@turf/intersect'), require('@turf/helpers'), require('@turf/square-grid'), require('ol/format/GeoJSON.js'), require('ol/tilegrid.js'), require('ol/tilegrid/TileGrid.js'), require('ol/source/XYZ.js'), require('ol/DataTile.js'), require('ol/ImageTile.js')) :

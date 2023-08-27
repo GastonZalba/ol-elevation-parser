@@ -84,3 +84,6 @@
 ## v1.3.14
 * Wrong z values now returns `undefined` instead of `0`
 * Added example
+
+## v1.3.15
+* Fixed example urls
