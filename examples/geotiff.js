@@ -4,7 +4,7 @@
         interpolate: false,
         sources: [
             {
-                url: '../geotiff/terrarium.tif'
+                url: 'geotiff/terrarium.tif'
             }
         ],
         sourceOptions: {
@@ -17,7 +17,7 @@
         interpolate: false,
         sources: [
             {
-                url: '../geotiff/mapbox.tif'
+                url: 'geotiff/mapbox.tif'
             }
         ],
         sourceOptions: {

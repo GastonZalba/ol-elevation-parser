@@ -44,7 +44,7 @@ Supports calculations from Points, LineStrings and Polygons. Each of these geome
     -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea)), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
 
 ## Examples
--   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/master/examples/geotiff).
+-   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/main/examples/geotiff.html).
 
 ## Usage
 
