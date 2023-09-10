@@ -1,7 +1,7 @@
 /*!
- * ol-elevation-parser - v1.3.15
+ * ol-elevation-parser - v1.3.16
  * https://github.com/GastonZalba/ol-elevation-parser#readme
- * Built: Sat Aug 26 2023 21:16:50 GMT-0300 (Argentina Standard Time)
+ * Built: Sun Sep 10 2023 12:54:43 GMT-0300 (Argentina Standard Time)
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('ol/geom/LineString.js'), require('ol/geom/Point.js'), require('ol/geom/Polygon.js'), require('ol/control/Control.js'), require('ol/source/TileWMS.js'), require('@turf/bbox'), require('@turf/area'), require('@turf/intersect'), require('@turf/helpers'), require('@turf/square-grid'), require('ol/format/GeoJSON.js'), require('ol/tilegrid.js'), require('ol/tilegrid/TileGrid.js'), require('ol/source/XYZ.js'), require('ol/DataTile.js'), require('ol/ImageTile.js')) :
@@ -342,6 +342,7 @@
 	            element: document.createElement('div')
 	        });
 	        this._countConnections = 0;
+	        this._rasterSourceIsLoaded = false;
 	        this._initialized = false;
 	        /**
 	         *
@@ -440,11 +441,24 @@
 	     */
 	    async getElevationValues(feature, customOptions = null) {
 	        try {
-	            const { sampledCoords, gridPolygons } = this._sampleFeatureCoords(feature, {
-	                samples: (customOptions === null || customOptions === void 0 ? void 0 : customOptions.samples) || this.getSamples(),
-	                sampleSizeArea: (customOptions === null || customOptions === void 0 ? void 0 : customOptions.sampleSizeArea) ||
-	                    this.getSampleSizeArea()
+	            const waitUntilRasterSourceIsLoaded = () => new Promise((resolve, reject) => {
+	                const isSourceReady = (retryNum = 0, maxRetries = 5, waitMilliseconds = 500) => {
+	                    if (source.getState() !== 'ready') {
+	                        retryNum++;
+	                        if (retryNum > maxRetries) {
+	                            reject();
+	                        }
+	                        else {
+	                            setTimeout(() => isSourceReady(retryNum++), waitMilliseconds);
+	                        }
+	                    }
+	                    else {
+	                        resolve(null);
+	                    }
+	                };
+	                isSourceReady();
 	            });
+	            const { sampledCoords, gridPolygons } = this._sampleFeatureCoords(feature, customOptions);
 	            let contourCoords, mainCoords;
 	            const source = this.get('source');
 	            if (typeof source === 'function') {
@@ -452,6 +466,10 @@
 	                ({ mainCoords, contourCoords } = await source(feature, sampledCoords));
 	            }
 	            else {
+	                if (!this._rasterSourceIsLoaded) {
+	                    await waitUntilRasterSourceIsLoaded();
+	                    this._rasterSourceIsLoaded = true;
+	                }
 	                mainCoords = await this._getZFromSampledCoords(sampledCoords.mainCoords, customOptions);
 	                // Only Polygons
 	                if (mainCoords && sampledCoords.contourCoords) {
@@ -693,6 +711,10 @@
 	    _sampleFeatureCoords(feature, params) {
 	        const geom = feature.getGeometry();
 	        let gridPolygons, contourCoords, mainCoords; // For polygons
+	        const mergedParams = {
+	            samples: (params === null || params === void 0 ? void 0 : params.samples) || this.getSamples(),
+	            sampleSizeArea: (params === null || params === void 0 ? void 0 : params.sampleSizeArea) || this.getSampleSizeArea()
+	        };
 	        if (geom instanceof Point) {
 	            mainCoords = [geom.getCoordinates()];
 	        }
@@ -700,8 +722,8 @@
 	            const polygonFeature = feature;
 	            const sub_coords = polygonFeature.getGeometry().getCoordinates()[0];
 	            const contourGeom = new LineString(sub_coords);
-	            contourCoords = getLineSamples(contourGeom, params.samples);
-	            gridPolygons = getPolygonSamples(polygonFeature, this.getMap().getView().getProjection().getCode(), params.sampleSizeArea);
+	            contourCoords = getLineSamples(contourGeom, mergedParams.samples);
+	            gridPolygons = getPolygonSamples(polygonFeature, this.getMap().getView().getProjection().getCode(), mergedParams.sampleSizeArea);
 	            mainCoords = gridPolygons.map((g) => {
 	                const coords = g
 	                    .getGeometry()
@@ -711,7 +733,7 @@
 	            });
 	        }
 	        else if (geom instanceof LineString) {
-	            mainCoords = getLineSamples(geom, params.samples);
+	            mainCoords = getLineSamples(geom, mergedParams.samples);
 	        }
 	        return {
 	            sampledCoords: {

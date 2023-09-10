@@ -30,6 +30,7 @@ export default class ElevationParser extends Control {
     protected _options: Options;
     protected _countConnections: number;
     protected _readFromImage: ReadFromImage;
+    protected _rasterSourceIsLoaded: boolean;
     protected _initialized: boolean;
     on: OnSignature<EventTypes | `${GeneralEventTypes}`, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
     once: OnSignature<EventTypes | `${GeneralEventTypes}`, BaseEvent, EventsKey> & OnSignature<ObjectEventTypes | ElevationParserEventTypes, ObjectEvent, EventsKey> & CombinedOnSignature<ElevationParserEventTypes | ObjectEventTypes | EventTypes, EventsKey>;
