@@ -14,7 +14,7 @@
 
 Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources, using raster grayscale or color processed rgbs as source.
 
-Tested with OpenLayers version 6 and 7.
+Tested with OpenLayers version 6, 7 and 8.
 
 ## How it works
 
@@ -44,7 +44,7 @@ Supports calculations from Points, LineStrings and Polygons. Each of these geome
     -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea)), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
 
 ## Examples
--   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/v1.3.15/examples/geotiff.html).
+-   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/v1.3.16/examples/geotiff.html).
 
 ## Usage
 

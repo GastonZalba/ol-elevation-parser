@@ -42,6 +42,7 @@ export default class ElevationParser extends Control {
     protected _options: Options;
     protected _countConnections = 0;
     protected _readFromImage: ReadFromImage;
+    protected _rasterSourceIsLoaded = false;
 
     protected _initialized = false;
 
@@ -121,14 +122,35 @@ export default class ElevationParser extends Control {
         customOptions: ElevationValuesIndividualOptions = null
     ): Promise<IGetElevationValues | Error> {
         try {
+            const waitUntilRasterSourceIsLoaded = () =>
+                new Promise((resolve, reject) => {
+                    const isSourceReady = (
+                        retryNum = 0,
+                        maxRetries = 5,
+                        waitMilliseconds = 500
+                    ) => {
+                        if ((source as RasterSources).getState() !== 'ready') {
+                            retryNum++;
+
+                            if (retryNum > maxRetries) {
+                                reject();
+                            } else {
+                                setTimeout(
+                                    () => isSourceReady(retryNum++),
+                                    waitMilliseconds
+                                );
+                            }
+                        } else {
+                            resolve(null);
+                        }
+                    };
+
+                    isSourceReady();
+                });
+
             const { sampledCoords, gridPolygons } = this._sampleFeatureCoords(
                 feature,
-                {
-                    samples: customOptions?.samples || this.getSamples(),
-                    sampleSizeArea:
-                        customOptions?.sampleSizeArea ||
-                        this.getSampleSizeArea()
-                }
+                customOptions
             );
 
             let contourCoords: CoordinatesXYZ[], mainCoords: CoordinatesXYZ[];
@@ -142,6 +164,11 @@ export default class ElevationParser extends Control {
                     sampledCoords
                 ));
             } else {
+                if (!this._rasterSourceIsLoaded) {
+                    await waitUntilRasterSourceIsLoaded();
+                    this._rasterSourceIsLoaded = true;
+                }
+
                 mainCoords = await this._getZFromSampledCoords(
                     sampledCoords.mainCoords,
                     customOptions
@@ -559,8 +586,8 @@ export default class ElevationParser extends Control {
     private _sampleFeatureCoords(
         feature: Feature<LineString | Point | Polygon>,
         params: {
-            samples: Options['samples'];
-            sampleSizeArea: Options['sampleSizeArea'];
+            samples?: Options['samples'];
+            sampleSizeArea?: Options['sampleSizeArea'];
         }
     ): ISampledGeom {
         const geom = feature.getGeometry();
@@ -569,6 +596,11 @@ export default class ElevationParser extends Control {
             contourCoords: CoordinatesXY[],
             mainCoords: CoordinatesXY[]; // For polygons
 
+        const mergedParams = {
+            samples: params?.samples || this.getSamples(),
+            sampleSizeArea: params?.sampleSizeArea || this.getSampleSizeArea()
+        };
+
         if (geom instanceof Point) {
             mainCoords = [geom.getCoordinates() as CoordinatesXY];
         } else if (geom instanceof Polygon) {
@@ -576,12 +608,12 @@ export default class ElevationParser extends Control {
 
             const sub_coords = polygonFeature.getGeometry().getCoordinates()[0];
             const contourGeom = new LineString(sub_coords);
-            contourCoords = getLineSamples(contourGeom, params.samples);
+            contourCoords = getLineSamples(contourGeom, mergedParams.samples);
 
             gridPolygons = getPolygonSamples(
                 polygonFeature,
                 this.getMap().getView().getProjection().getCode(),
-                params.sampleSizeArea
+                mergedParams.sampleSizeArea
             );
             mainCoords = gridPolygons.map((g) => {
                 const coords = g
@@ -591,7 +623,7 @@ export default class ElevationParser extends Control {
                 return [coords[0], coords[1]];
             });
         } else if (geom instanceof LineString) {
-            mainCoords = getLineSamples(geom, params.samples);
+            mainCoords = getLineSamples(geom, mergedParams.samples);
         }
 
         return {

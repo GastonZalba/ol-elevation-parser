@@ -87,3 +87,8 @@
 
 ## v1.3.15
 * Fixed example urls
+
+## v1.3.16
+* Added retry function to wait until raster sources are loaded
+* Added some missing dev dependencies
+* Updated to Ol8
