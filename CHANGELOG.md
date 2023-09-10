@@ -92,3 +92,6 @@
 * Added retry function to wait until raster sources are loaded
 * Added some missing dev dependencies
 * Updated to Ol8
+
+## v1.3.17
+* If enabled, `noData` values àre now returned as `undefined` instead of `0`

@@ -478,7 +478,8 @@ export default class ElevationParser extends Control {
                 }
 
                 if (this.get('noDataValue') !== false) {
-                    zValue = zValue === this.get('noDataValue') ? 0 : zValue;
+                    zValue =
+                        zValue === this.get('noDataValue') ? undefined : zValue;
                 }
 
                 // If null or undefined value is returned, transform to 0

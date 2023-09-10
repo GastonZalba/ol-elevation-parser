@@ -44,7 +44,7 @@ Supports calculations from Points, LineStrings and Polygons. Each of these geome
     -   on the other hand, the area. To calculate this, a sampling is done in the form of a grid (see [sampleSizeArea](#sampleSizeArea)), from which an interior point is obtained. Each of those points is requested. The greater the number of samples, the longer it will take, but the greater the accuracy of the calculation.
 
 ## Examples
--   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/v1.3.16/examples/geotiff.html).
+-   Basic usage using Geotiff sources: create an OpenLayers map instance and add Ol Elevation Parser as a control [See example](https://raw.githack.com/GastonZalba/ol-elevation-parser/v1.3.17/examples/geotiff.html).
 
 ## Usage
 
@@ -98,7 +98,7 @@ See CHANGELOG for details of changes in each release.
 Load `ol-elevation-parser.js` after [OpenLayers](https://www.npmjs.com/package/ol). Elevation Parser is available as `ElevationParser`.
 
 ```HTML
-<script src="https://unpkg.com/ol-elevation-parser@1.3.16"></script>
+<script src="https://unpkg.com/ol-elevation-parser@1.3.17"></script>
 ```
 ### Parcel, Webpack, etc.
 
