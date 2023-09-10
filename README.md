@@ -98,7 +98,7 @@ See CHANGELOG for details of changes in each release.
 Load `ol-elevation-parser.js` after [OpenLayers](https://www.npmjs.com/package/ol). Elevation Parser is available as `ElevationParser`.
 
 ```HTML
-<script src="https://unpkg.com/ol-elevation-parser@1.3.14"></script>
+<script src="https://unpkg.com/ol-elevation-parser@1.3.16"></script>
 ```
 ### Parcel, Webpack, etc.
 
