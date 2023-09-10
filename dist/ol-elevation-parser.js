@@ -1,7 +1,7 @@
 /*!
- * ol-elevation-parser - v1.3.16
+ * ol-elevation-parser - v1.3.17
  * https://github.com/GastonZalba/ol-elevation-parser#readme
- * Built: Sun Sep 10 2023 12:54:43 GMT-0300 (Argentina Standard Time)
+ * Built: Sun Sep 10 2023 19:54:24 GMT-0300 (Argentina Standard Time)
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('ol/geom/LineString.js'), require('ol/geom/Point.js'), require('ol/geom/Polygon.js'), require('ol/control/Control.js'), require('ol/source/TileWMS.js'), require('@turf/bbox'), require('@turf/area'), require('@turf/intersect'), require('@turf/helpers'), require('@turf/square-grid'), require('ol/format/GeoJSON.js'), require('ol/tilegrid.js'), require('ol/tilegrid/TileGrid.js'), require('ol/source/XYZ.js'), require('ol/DataTile.js'), require('ol/ImageTile.js')) :
@@ -404,7 +404,8 @@
 	                        zValue = await this._getZValuesFromImage(coord, resolutionNumber);
 	                    }
 	                    if (this.get('noDataValue') !== false) {
-	                        zValue = zValue === this.get('noDataValue') ? 0 : zValue;
+	                        zValue =
+	                            zValue === this.get('noDataValue') ? undefined : zValue;
 	                    }
 	                    // If null or undefined value is returned, transform to 0
 	                    const zValueRound = typeof zValue !== 'undefined'
