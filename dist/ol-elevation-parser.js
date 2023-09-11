@@ -1,7 +1,7 @@
 /*!
- * ol-elevation-parser - v1.3.17
+ * ol-elevation-parser - v1.3.18
  * https://github.com/GastonZalba/ol-elevation-parser#readme
- * Built: Sun Sep 10 2023 19:54:24 GMT-0300 (Argentina Standard Time)
+ * Built: Mon Sep 11 2023 09:42:39 GMT-0300 (hora estándar de Argentina)
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('ol/geom/LineString.js'), require('ol/geom/Point.js'), require('ol/geom/Polygon.js'), require('ol/control/Control.js'), require('ol/source/TileWMS.js'), require('@turf/bbox'), require('@turf/area'), require('@turf/intersect'), require('@turf/helpers'), require('@turf/square-grid'), require('ol/format/GeoJSON.js'), require('ol/tilegrid.js'), require('ol/tilegrid/TileGrid.js'), require('ol/source/XYZ.js'), require('ol/DataTile.js'), require('ol/ImageTile.js')) :
@@ -280,9 +280,9 @@
 	     * @returns
 	     */
 	    getMaxResolution() {
-	        const resolutions = this._getTileGrid().getResolutions();
-	        if (resolutions)
-	            return resolutions[resolutions.length - 1];
+	        const zoom = this._getTileGrid().getMaxZoom();
+	        if (zoom)
+	            return this._getTileGrid().getResolution(zoom);
 	        return null;
 	    }
 	    /**
@@ -763,6 +763,7 @@
 	     * @private
 	     */
 	    async _getZValuesFromWMS(coordinate, source, view) {
+	        var _a, _b;
 	        const url = source.getFeatureInfoUrl(coordinate, view.getResolution(), view.getProjection(), {
 	            INFO_FORMAT: 'application/json',
 	            BUFFER: 0,
@@ -772,7 +773,7 @@
 	            signal: AbortSignal.timeout(this.getTimeout())
 	        });
 	        const data = await response.json();
-	        return data.features[0].properties.GRAY_INDEX;
+	        return (_b = (_a = data.features[0]) === null || _a === void 0 ? void 0 : _a.properties) === null || _b === void 0 ? void 0 : _b.GRAY_INDEX;
 	    }
 	}
 	var GeneralEventTypes;
