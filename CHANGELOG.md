@@ -94,4 +94,7 @@
 * Updated to Ol8
 
 ## v1.3.17
-* If enabled, `noData` values àre now returned as `undefined` instead of `0`
+* If enabled, `noData` values are now returned as `undefined` instead of `0`
+
+## v1.3.18
+* Fixed uncaught error that happened when `getFeatureInfo` responded with no features/empty values, now they return as `undefined`

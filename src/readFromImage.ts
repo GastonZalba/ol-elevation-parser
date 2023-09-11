@@ -156,8 +156,8 @@ export default class ReadFromImage {
      * @returns
      */
     getMaxResolution(): number {
-        const resolutions = this._getTileGrid().getResolutions();
-        if (resolutions) return resolutions[resolutions.length - 1];
+        const zoom = this._getTileGrid().getMaxZoom();
+        if (zoom) return this._getTileGrid().getResolution(zoom);
         return null;
     }
 

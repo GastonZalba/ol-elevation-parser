@@ -680,7 +680,7 @@ export default class ElevationParser extends Control {
 
         const data = await response.json();
 
-        return data.features[0].properties.GRAY_INDEX;
+        return data.features[0]?.properties?.GRAY_INDEX;
     }
 }
 
