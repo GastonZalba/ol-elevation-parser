@@ -57,35 +57,43 @@ export const getLineSamples = (
     let segmentCount = 0;
 
     // Get samples every percentage step while conserving all the vertex
-    geom.forEachSegment((start: CoordinatesXY, end: CoordinatesXY) => {
-        // Only get the first start segment
-        if (!segmentCount) {
-            sampledCoords.push(start);
+    geom.forEachSegment(
+        (
+            start: CoordinatesXY | CoordinatesXYZ,
+            end: CoordinatesXY | CoordinatesXYZ
+        ) => {
+            // Only get the first start segment
+            if (!segmentCount) {
+                sampledCoords.push([start[0], start[1]] as CoordinatesXY);
+            }
+
+            segmentCount++;
+
+            const segmentGeom = new LineString([
+                [start[0], start[1]],
+                [end[0], end[1]]
+            ]);
+            const segmentLength = segmentGeom.getLength();
+
+            /**
+             * segmentLength -> 100
+             * metersSample -> x
+             */
+            const newPercentage = (100 * metersSample) / segmentLength;
+
+            // skip 0 and 100
+            let segmentStepPercent = newPercentage;
+            while (segmentStepPercent < 100) {
+                const coordAt = segmentGeom.getCoordinateAt(
+                    segmentStepPercent / 100
+                ) as CoordinatesXY;
+                sampledCoords.push(coordAt);
+                segmentStepPercent = segmentStepPercent + newPercentage;
+            }
+
+            sampledCoords.push([end[0], end[1]]);
         }
-
-        segmentCount++;
-
-        const segmentGeom = new LineString([start, end]);
-        const segmentLength = segmentGeom.getLength();
-
-        /**
-         * segmentLength -> 100
-         * metersSample -> x
-         */
-        const newPercentage = (100 * metersSample) / segmentLength;
-
-        // skip 0 and 100
-        let segmentStepPercent = newPercentage;
-        while (segmentStepPercent < 100) {
-            const coordAt = segmentGeom.getCoordinateAt(
-                segmentStepPercent / 100
-            ) as CoordinatesXY;
-            sampledCoords.push(coordAt);
-            segmentStepPercent = segmentStepPercent + newPercentage;
-        }
-
-        sampledCoords.push(end);
-    });
+    );
 
     return sampledCoords;
 };

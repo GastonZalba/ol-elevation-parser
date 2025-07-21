@@ -603,12 +603,12 @@ export default class ElevationParser extends Control {
         };
 
         if (geom instanceof Point) {
-            mainCoords = [geom.getCoordinates() as CoordinatesXY];
+            mainCoords = [[geom.getCoordinates()[0], geom.getCoordinates()[1]]];
         } else if (geom instanceof Polygon) {
             const polygonFeature = feature as Feature<Polygon>;
 
             const sub_coords = polygonFeature.getGeometry().getCoordinates()[0];
-            const contourGeom = new LineString(sub_coords);
+            const contourGeom = new LineString([sub_coords[0], sub_coords[1]]);
             contourCoords = getLineSamples(contourGeom, mergedParams.samples);
 
             gridPolygons = getPolygonSamples(
