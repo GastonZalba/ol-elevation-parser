@@ -1,7 +1,7 @@
 /*!
- * ol-elevation-parser - v1.3.18
+ * ol-elevation-parser - v1.3.19
  * https://github.com/GastonZalba/ol-elevation-parser#readme
- * Built: Mon Sep 11 2023 09:42:39 GMT-0300 (hora estándar de Argentina)
+ * Built: Mon Jul 21 2025 13:58:32 GMT-0300 (hora estándar de Argentina)
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('ol/geom/LineString.js'), require('ol/geom/Point.js'), require('ol/geom/Polygon.js'), require('ol/control/Control.js'), require('ol/source/TileWMS.js'), require('@turf/bbox'), require('@turf/area'), require('@turf/intersect'), require('@turf/helpers'), require('@turf/square-grid'), require('ol/format/GeoJSON.js'), require('ol/tilegrid.js'), require('ol/tilegrid/TileGrid.js'), require('ol/source/XYZ.js'), require('ol/DataTile.js'), require('ol/ImageTile.js')) :
@@ -77,10 +77,13 @@
 	    geom.forEachSegment((start, end) => {
 	        // Only get the first start segment
 	        if (!segmentCount) {
-	            sampledCoords.push(start);
+	            sampledCoords.push([start[0], start[1]]);
 	        }
 	        segmentCount++;
-	        const segmentGeom = new LineString([start, end]);
+	        const segmentGeom = new LineString([
+	            [start[0], start[1]],
+	            [end[0], end[1]]
+	        ]);
 	        const segmentLength = segmentGeom.getLength();
 	        /**
 	         * segmentLength -> 100
@@ -94,7 +97,7 @@
 	            sampledCoords.push(coordAt);
 	            segmentStepPercent = segmentStepPercent + newPercentage;
 	        }
-	        sampledCoords.push(end);
+	        sampledCoords.push([end[0], end[1]]);
 	    });
 	    return sampledCoords;
 	};
@@ -717,12 +720,12 @@
 	            sampleSizeArea: (params === null || params === void 0 ? void 0 : params.sampleSizeArea) || this.getSampleSizeArea()
 	        };
 	        if (geom instanceof Point) {
-	            mainCoords = [geom.getCoordinates()];
+	            mainCoords = [[geom.getCoordinates()[0], geom.getCoordinates()[1]]];
 	        }
 	        else if (geom instanceof Polygon) {
 	            const polygonFeature = feature;
 	            const sub_coords = polygonFeature.getGeometry().getCoordinates()[0];
-	            const contourGeom = new LineString(sub_coords);
+	            const contourGeom = new LineString([sub_coords[0], sub_coords[1]]);
 	            contourCoords = getLineSamples(contourGeom, mergedParams.samples);
 	            gridPolygons = getPolygonSamples(polygonFeature, this.getMap().getView().getProjection().getCode(), mergedParams.sampleSizeArea);
 	            mainCoords = gridPolygons.map((g) => {

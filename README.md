@@ -14,7 +14,7 @@
 
 Tiny module to retrieve and parse data to create elevation profiles and/or volume calculations from raster sources. This will sample the provided geometries and then parse the elevation data from differents Open Layers sources, using raster grayscale or color processed rgbs as source.
 
-Tested with OpenLayers version 6, 7 and 8.
+Tested with OpenLayers version 6, 7, 8, 9 and 10.
 
 ## How it works
 

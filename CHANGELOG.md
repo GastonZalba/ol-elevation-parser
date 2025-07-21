@@ -98,3 +98,6 @@
 
 ## v1.3.18
 * Fixed uncaught error that happened when `getFeatureInfo` responded with no features/empty values, now they return as `undefined`
+
+## v1.3.19
+* Fixed bug when `getElevationValues` is called with a geometry containing z values
