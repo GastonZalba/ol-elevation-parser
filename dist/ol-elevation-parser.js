@@ -1,7 +1,7 @@
 /*!
- * ol-elevation-parser - v1.3.19
+ * ol-elevation-parser - v1.3.20
  * https://github.com/GastonZalba/ol-elevation-parser#readme
- * Built: Mon Jul 21 2025 13:58:32 GMT-0300 (hora estándar de Argentina)
+ * Built: Wed Aug 13 2025 14:19:24 GMT-0300 (hora estándar de Argentina)
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('ol/geom/LineString.js'), require('ol/geom/Point.js'), require('ol/geom/Polygon.js'), require('ol/control/Control.js'), require('ol/source/TileWMS.js'), require('@turf/bbox'), require('@turf/area'), require('@turf/intersect'), require('@turf/helpers'), require('@turf/square-grid'), require('ol/format/GeoJSON.js'), require('ol/tilegrid.js'), require('ol/tilegrid/TileGrid.js'), require('ol/source/XYZ.js'), require('ol/DataTile.js'), require('ol/ImageTile.js')) :
@@ -410,8 +410,10 @@
 	                        zValue =
 	                            zValue === this.get('noDataValue') ? undefined : zValue;
 	                    }
-	                    // If null or undefined value is returned, transform to 0
-	                    const zValueRound = typeof zValue !== 'undefined'
+	                    const baseValue = this.get('calculateZMethod') === 'Terrarium'
+	                        ? -32768
+	                        : undefined;
+	                    const zValueRound = typeof zValue !== 'undefined' && zValue !== baseValue
 	                        ? Number(zValue.toFixed(3))
 	                        : undefined;
 	                    coordsWithZ.push([...coord, zValueRound]);

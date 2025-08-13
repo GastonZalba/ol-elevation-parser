@@ -101,3 +101,6 @@
 
 ## v1.3.19
 * Fixed bug when `getElevationValues` is called with a geometry containing z values
+
+## v1.3.20
+* `-32768` value in Terrarium codification is now considered `undefined`
