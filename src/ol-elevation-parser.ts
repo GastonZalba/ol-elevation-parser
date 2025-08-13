@@ -482,9 +482,13 @@ export default class ElevationParser extends Control {
                         zValue === this.get('noDataValue') ? undefined : zValue;
                 }
 
-                // If null or undefined value is returned, transform to 0
+                const baseValue =
+                    this.get('calculateZMethod') === 'Terrarium'
+                        ? -32768
+                        : undefined;
+
                 const zValueRound =
-                    typeof zValue !== 'undefined'
+                    typeof zValue !== 'undefined' && zValue !== baseValue
                         ? Number(zValue.toFixed(3))
                         : undefined;
 
